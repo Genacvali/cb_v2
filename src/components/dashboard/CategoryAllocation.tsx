@@ -85,8 +85,8 @@ export function CategoryAllocation() {
     return <div className="space-y-1.5 md:space-y-2 p-3 md:p-0">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-secondary/50">
-              <CategoryIcon icon={cat.icon} className="w-3.5 h-3.5 md:w-4 md:h-4" />
+            <div className="w-8 h-8 md:w-9 md:h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-secondary/50 overflow-visible">
+              <CategoryIcon icon={cat.icon} />
             </div>
             <div className="min-w-0 flex-1">
               <span className="font-medium text-sm md:text-base block truncate">{cat.name}</span>
