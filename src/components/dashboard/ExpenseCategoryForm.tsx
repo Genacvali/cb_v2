@@ -16,7 +16,7 @@ import { CategoryIcon } from '@/components/icons/CategoryIcon';
 import { Plus, Trash2, Lightbulb, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { ExpenseCategory } from '@/types/budget';
-import { CATEGORY_ICON_OPTIONS, CATEGORY_COLOR_OPTIONS } from '@/constants/categoryOptions';
+import { CATEGORY_EMOJI_OPTIONS, DEFAULT_CATEGORY_COLOR } from '@/constants/categoryOptions';
 
 interface AllocationFormData {
   id?: string;
@@ -40,16 +40,15 @@ export function ExpenseCategoryForm({ category, isEditing = false, onClose, onSu
   const bulkSaveAllocations = useBulkSaveAllocations();
 
   const [name, setName] = useState('');
-  const [icon, setIcon] = useState('shopping-cart');
-  const [color, setColor] = useState('#F59E0B');
+  const [icon, setIcon] = useState('🛒');
+  const [color] = useState(DEFAULT_CATEGORY_COLOR);
   const [allocations, setAllocations] = useState<AllocationFormData[]>([]);
   const [showAllocations, setShowAllocations] = useState(false);
 
   useEffect(() => {
     if (category && isEditing) {
       setName(category.name);
-      setIcon(category.icon);
-      setColor(category.color);
+      setIcon(category.icon || '🛒');
       setShowAllocations(true);
     }
   }, [category, isEditing]);
@@ -165,43 +164,23 @@ export function ExpenseCategoryForm({ category, isEditing = false, onClose, onSu
           />
         </div>
 
-        {/* Icon Grid */}
+        {/* Emoji Grid */}
         <div className="space-y-2">
           <Label>Иконка</Label>
           <div className="grid grid-cols-10 gap-1.5">
-            {CATEGORY_ICON_OPTIONS.map((iconName) => (
+            {CATEGORY_EMOJI_OPTIONS.map((emoji) => (
               <button
-                key={iconName}
+                key={emoji}
                 type="button"
-                onClick={() => setIcon(iconName)}
-                className={`w-9 h-9 rounded-lg flex items-center justify-center border-2 transition-all ${
-                  icon === iconName
+                onClick={() => setIcon(emoji)}
+                className={`w-9 h-9 rounded-lg flex items-center justify-center border-2 transition-all text-xl ${
+                  icon === emoji
                     ? 'border-primary bg-primary/20 scale-110'
                     : 'border-transparent bg-secondary/50 hover:bg-secondary'
                 }`}
               >
-                <CategoryIcon icon={iconName} color={color} className="w-4 h-4" />
+                {emoji}
               </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Color Picker */}
-        <div className="space-y-2">
-          <Label>Цвет</Label>
-          <div className="flex flex-wrap gap-2">
-            {CATEGORY_COLOR_OPTIONS.map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => setColor(c)}
-                className={`w-8 h-8 rounded-full transition-transform ${
-                  color === c
-                    ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110'
-                    : 'hover:scale-105'
-                }`}
-                style={{ backgroundColor: c }}
-              />
             ))}
           </div>
         </div>

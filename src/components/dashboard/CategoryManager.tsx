@@ -39,7 +39,7 @@ import { toast } from 'sonner';
 import { IncomeCategory, ExpenseCategory } from '@/types/budget';
 import { ExpenseCategoryEditor } from './ExpenseCategoryEditor';
 import { ExpenseCategoryForm } from './ExpenseCategoryForm';
-import { CATEGORY_ICON_OPTIONS, CATEGORY_COLOR_OPTIONS } from '@/constants/categoryOptions';
+import { CATEGORY_EMOJI_OPTIONS, DEFAULT_CATEGORY_COLOR } from '@/constants/categoryOptions';
 
 interface CategoryFormData {
   name: string;
@@ -61,7 +61,7 @@ export function CategoryManager() {
   const [editingIncomeCategory, setEditingIncomeCategory] = useState<IncomeCategory | null>(null);
   const [editingExpenseCategory, setEditingExpenseCategory] = useState<ExpenseCategory | null>(null);
   const [expenseEditDialogOpen, setExpenseEditDialogOpen] = useState(false);
-  const [newCategory, setNewCategory] = useState<CategoryFormData>({ name: '', icon: 'wallet', color: '#10B981' });
+  const [newCategory, setNewCategory] = useState<CategoryFormData>({ name: '', icon: '💰', color: DEFAULT_CATEGORY_COLOR });
   const [showAddIncomeForm, setShowAddIncomeForm] = useState(false);
   const [showAddExpenseForm, setShowAddExpenseForm] = useState(false);
 
@@ -92,7 +92,7 @@ export function CategoryManager() {
     try {
       await addIncomeCategory.mutateAsync(newCategory);
       toast.success('Категория добавлена');
-      setNewCategory({ name: '', icon: 'wallet', color: '#10B981' });
+      setNewCategory({ name: '', icon: '💰', color: DEFAULT_CATEGORY_COLOR });
       setShowAddIncomeForm(false);
     } catch {
       toast.error('Ошибка при добавлении');
@@ -115,7 +115,7 @@ export function CategoryManager() {
       toast.success('Категория обновлена');
       setIncomeEditDialogOpen(false);
       setEditingIncomeCategory(null);
-      setNewCategory({ name: '', icon: 'wallet', color: '#10B981' });
+      setNewCategory({ name: '', icon: '💰', color: DEFAULT_CATEGORY_COLOR });
     } catch {
       toast.error('Ошибка при обновлении');
     }
@@ -125,8 +125,8 @@ export function CategoryManager() {
     setEditingIncomeCategory(category);
     setNewCategory({
       name: category.name,
-      icon: category.icon,
-      color: category.color
+      icon: category.icon || '💰',
+      color: category.color || DEFAULT_CATEGORY_COLOR
     });
     setIncomeEditDialogOpen(true);
   };
@@ -213,10 +213,9 @@ export function CategoryManager() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div 
-                            className="w-12 h-12 rounded-xl flex items-center justify-center"
-                            style={{ backgroundColor: `${cat.color}20` }}
+                            className="w-12 h-12 rounded-xl flex items-center justify-center bg-secondary/50"
                           >
-                            <CategoryIcon icon={cat.icon} color={cat.color} className="w-6 h-6" />
+                            <CategoryIcon icon={cat.icon} className="w-6 h-6" />
                           </div>
                           <div>
                             <span className="font-medium">{cat.name}</span>
@@ -280,7 +279,7 @@ export function CategoryManager() {
                 <Button 
                   size="sm" 
                   onClick={() => {
-                    setNewCategory({ name: '', icon: 'wallet', color: '#10B981' });
+                    setNewCategory({ name: '', icon: '💰', color: DEFAULT_CATEGORY_COLOR });
                     setShowAddIncomeForm(true);
                   }}
                   className="gap-1"
@@ -305,33 +304,17 @@ export function CategoryManager() {
                     <div className="space-y-2">
                       <Label>Иконка</Label>
                       <div className="grid grid-cols-10 gap-1.5">
-                        {CATEGORY_ICON_OPTIONS.map(icon => (
+                        {CATEGORY_EMOJI_OPTIONS.map(emoji => (
                           <button
-                            key={icon}
+                            key={emoji}
                             type="button"
-                            onClick={() => setNewCategory(prev => ({ ...prev, icon }))}
-                            className={`w-9 h-9 rounded-lg flex items-center justify-center border-2 transition-all ${
-                              newCategory.icon === icon ? 'border-primary bg-primary/20 scale-110' : 'border-transparent bg-secondary/50 hover:bg-secondary'
+                            onClick={() => setNewCategory(prev => ({ ...prev, icon: emoji }))}
+                            className={`w-9 h-9 rounded-lg flex items-center justify-center border-2 transition-all text-xl ${
+                              newCategory.icon === emoji ? 'border-primary bg-primary/20 scale-110' : 'border-transparent bg-secondary/50 hover:bg-secondary'
                             }`}
                           >
-                            <CategoryIcon icon={icon} color={newCategory.color} className="w-4 h-4" />
+                            {emoji}
                           </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Цвет</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {CATEGORY_COLOR_OPTIONS.map(color => (
-                          <button
-                            key={color}
-                            type="button"
-                            onClick={() => setNewCategory(prev => ({ ...prev, color }))}
-                            className={`w-8 h-8 rounded-full transition-transform ${
-                              newCategory.color === color ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110' : 'hover:scale-105'
-                            }`}
-                            style={{ backgroundColor: color }}
-                          />
                         ))}
                       </div>
                     </div>
@@ -358,10 +341,9 @@ export function CategoryManager() {
                   >
                     <div className="flex items-center gap-3">
                       <div 
-                        className="w-12 h-12 rounded-xl flex items-center justify-center"
-                        style={{ backgroundColor: `${cat.color}20` }}
+                        className="w-12 h-12 rounded-xl flex items-center justify-center bg-secondary/50"
                       >
-                        <CategoryIcon icon={cat.icon} color={cat.color} className="w-6 h-6" />
+                        <CategoryIcon icon={cat.icon} className="w-6 h-6" />
                       </div>
                       <span className="font-medium">{cat.name}</span>
                     </div>
@@ -422,33 +404,17 @@ export function CategoryManager() {
             <div className="space-y-2">
               <Label>Иконка</Label>
               <div className="grid grid-cols-10 gap-1.5">
-                {CATEGORY_ICON_OPTIONS.map(icon => (
+                {CATEGORY_EMOJI_OPTIONS.map(emoji => (
                   <button
-                    key={icon}
+                    key={emoji}
                     type="button"
-                    onClick={() => setNewCategory(prev => ({ ...prev, icon }))}
-                    className={`w-9 h-9 rounded-lg flex items-center justify-center border-2 transition-all ${
-                      newCategory.icon === icon ? 'border-primary bg-primary/20 scale-110' : 'border-transparent bg-secondary/50 hover:bg-secondary'
+                    onClick={() => setNewCategory(prev => ({ ...prev, icon: emoji }))}
+                    className={`w-9 h-9 rounded-lg flex items-center justify-center border-2 transition-all text-xl ${
+                      newCategory.icon === emoji ? 'border-primary bg-primary/20 scale-110' : 'border-transparent bg-secondary/50 hover:bg-secondary'
                     }`}
                   >
-                    <CategoryIcon icon={icon} color={newCategory.color} className="w-4 h-4" />
+                    {emoji}
                   </button>
-                ))}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Цвет</Label>
-              <div className="flex flex-wrap gap-2">
-                {CATEGORY_COLOR_OPTIONS.map(color => (
-                  <button
-                    key={color}
-                    type="button"
-                    onClick={() => setNewCategory(prev => ({ ...prev, color }))}
-                    className={`w-8 h-8 rounded-full transition-transform ${
-                      newCategory.color === color ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110' : 'hover:scale-105'
-                    }`}
-                    style={{ backgroundColor: color }}
-                  />
                 ))}
               </div>
             </div>
