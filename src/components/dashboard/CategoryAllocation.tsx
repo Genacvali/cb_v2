@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { CategoryIcon } from '@/components/icons/CategoryIcon';
+import { QuickCategoryAdd } from './QuickCategoryAdd';
 
 export function CategoryAllocation() {
   const { data: expenseCategories = [] } = useExpenseCategories();
@@ -43,17 +44,21 @@ export function CategoryAllocation() {
 
   return (
     <Card className="glass-card">
-      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 p-4 md:p-6">
-        <CardTitle className="text-base md:text-lg">Распределение по категориям</CardTitle>
-        <Badge variant={allocationPercent >= 100 ? 'default' : 'secondary'} className="text-xs">
-          {allocationPercent}% распределено
-        </Badge>
+      <CardHeader className="flex flex-row items-center justify-between gap-2 p-4 md:p-6">
+        <div className="flex items-center gap-2">
+          <CardTitle className="text-base md:text-lg">Категории расходов</CardTitle>
+          <Badge variant={allocationPercent >= 100 ? 'default' : 'secondary'} className="text-xs">
+            {allocationPercent}%
+          </Badge>
+        </div>
+        <QuickCategoryAdd type="expense" />
       </CardHeader>
       <CardContent className="space-y-3 md:space-y-4 p-4 md:p-6 pt-0 md:pt-0">
         {expenseCategories.length === 0 ? (
-          <p className="text-muted-foreground text-center py-4 text-sm">
-            Категории расходов не найдены
-          </p>
+          <div className="text-center py-6">
+            <p className="text-muted-foreground text-sm mb-2">Нет категорий расходов</p>
+            <p className="text-xs text-muted-foreground">Нажмите «Добавить» чтобы создать</p>
+          </div>
         ) : (
           expenseCategories.map((cat) => {
             const amount = getCategoryAllocation(cat.id);
@@ -65,10 +70,9 @@ export function CategoryAllocation() {
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     <div 
-                      className="w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: `${cat.color}20` }}
+                      className="w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-secondary/50"
                     >
-                      <CategoryIcon icon={cat.icon} color={cat.color} className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                      <CategoryIcon icon={cat.icon} className="w-3.5 h-3.5 md:w-4 md:h-4" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <span className="font-medium text-sm md:text-base block truncate">{cat.name}</span>
@@ -94,7 +98,6 @@ export function CategoryAllocation() {
                   <Progress 
                     value={progressValue} 
                     className="h-1.5 md:h-2 flex-1"
-                    indicatorColor={cat.color}
                     animated
                   />
                   <span className="text-[10px] md:text-xs text-muted-foreground w-8 md:w-12 text-right">
