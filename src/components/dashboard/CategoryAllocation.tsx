@@ -90,13 +90,12 @@ export function CategoryAllocation() {
                   </span>
                 </div>
                 
-                <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3">
                   <Progress 
                     value={progressValue} 
                     className="h-2 flex-1"
-                    style={{ 
-                      ['--progress-color' as string]: cat.color,
-                    }}
+                    indicatorColor={cat.color}
+                    animated
                   />
                   <span className="text-xs text-muted-foreground w-12 text-right">
                     {Math.round(progressValue)}%
