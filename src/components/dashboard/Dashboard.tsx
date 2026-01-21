@@ -3,6 +3,7 @@ import { StatsCards } from './StatsCards';
 import { BudgetChart } from './BudgetChart';
 import { AddIncomeForm } from './AddIncomeForm';
 import { CategoryAllocation } from './CategoryAllocation';
+import { CategoryManager } from './CategoryManager';
 
 export function Dashboard() {
   return (
@@ -10,6 +11,10 @@ export function Dashboard() {
       <Header />
       
       <main className="container mx-auto px-4 py-8">
+        <div className="flex justify-end mb-4">
+          <CategoryManager />
+        </div>
+        
         <StatsCards />
         
         <div className="grid lg:grid-cols-2 gap-6">
