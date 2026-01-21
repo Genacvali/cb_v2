@@ -5,18 +5,29 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { CategoryIcon } from '@/components/icons/CategoryIcon';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, Loader2, Wallet } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export function AddIncomeForm() {
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [description, setDescription] = useState('');
+  const [isStartingBalance, setIsStartingBalance] = useState(false);
   
   const { data: incomeCategories = [] } = useIncomeCategories();
   const addIncome = useAddIncome();
   const { toast } = useToast();
+
+  const handleStartingBalanceToggle = (checked: boolean) => {
+    setIsStartingBalance(checked);
+    if (checked) {
+      setDescription('Начальный баланс');
+    } else {
+      setDescription('');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,16 +45,17 @@ export function AddIncomeForm() {
       await addIncome.mutateAsync({
         amount: parseFloat(amount),
         category_id: categoryId,
-        description: description || null,
+        description: isStartingBalance ? 'Начальный баланс' : (description || null),
       });
       
       setAmount('');
       setCategoryId('');
       setDescription('');
+      setIsStartingBalance(false);
       
       toast({
         title: 'Успешно!',
-        description: 'Доход добавлен',
+        description: isStartingBalance ? 'Начальный баланс добавлен' : 'Доход добавлен',
       });
     } catch (error) {
       toast({
@@ -64,9 +76,26 @@ export function AddIncomeForm() {
       </CardHeader>
       <CardContent className="p-4 md:p-6 pt-0 md:pt-0">
         <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
+          {/* Starting balance toggle */}
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border/50">
+            <div className="flex items-center gap-2">
+              <Wallet className="w-4 h-4 text-muted-foreground" />
+              <Label htmlFor="starting-balance" className="text-sm font-normal cursor-pointer">
+                Это начальный баланс
+              </Label>
+            </div>
+            <Switch
+              id="starting-balance"
+              checked={isStartingBalance}
+              onCheckedChange={handleStartingBalanceToggle}
+            />
+          </div>
+
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
             <div className="space-y-1.5 md:space-y-2">
-              <Label htmlFor="amount" className="text-sm">Сумма *</Label>
+              <Label htmlFor="amount" className="text-sm">
+                {isStartingBalance ? 'Текущий баланс *' : 'Сумма *'}
+              </Label>
               <Input
                 id="amount"
                 type="number"
@@ -81,7 +110,9 @@ export function AddIncomeForm() {
             </div>
             
             <div className="space-y-1.5 md:space-y-2">
-              <Label htmlFor="category" className="text-sm">Категория *</Label>
+              <Label htmlFor="category" className="text-sm">
+                {isStartingBalance ? 'Источник *' : 'Категория *'}
+              </Label>
               <Select value={categoryId} onValueChange={setCategoryId}>
                 <SelectTrigger className="h-10 md:h-11">
                   <SelectValue placeholder="Выберите категорию" />
@@ -100,16 +131,18 @@ export function AddIncomeForm() {
             </div>
           </div>
 
-          <div className="space-y-1.5 md:space-y-2">
-            <Label htmlFor="description" className="text-sm">Описание</Label>
-            <Input
-              id="description"
-              placeholder="Например: Зарплата за январь"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="h-10 md:h-11"
-            />
-          </div>
+          {!isStartingBalance && (
+            <div className="space-y-1.5 md:space-y-2">
+              <Label htmlFor="description" className="text-sm">Описание</Label>
+              <Input
+                id="description"
+                placeholder="Например: Зарплата за январь"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="h-10 md:h-11"
+              />
+            </div>
+          )}
 
           <Button 
             type="submit" 
@@ -119,12 +152,12 @@ export function AddIncomeForm() {
             {addIncome.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Добавляю...
+                {isStartingBalance ? 'Сохраняю...' : 'Добавляю...'}
               </>
             ) : (
               <>
-                <Plus className="mr-2 h-4 w-4" />
-                Добавить доход
+                {isStartingBalance ? <Wallet className="mr-2 h-4 w-4" /> : <Plus className="mr-2 h-4 w-4" />}
+                {isStartingBalance ? 'Сохранить баланс' : 'Добавить доход'}
               </>
             )}
           </Button>
