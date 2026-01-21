@@ -4,13 +4,16 @@ import { useAllAllocations } from '@/hooks/useAllocations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { CategoryIcon } from '@/components/icons/CategoryIcon';
-import { QuickCategoryAdd } from './QuickCategoryAdd';
 import { SwipeableCategory } from './SwipeableCategory';
 import { ExpenseCategoryEditor } from './ExpenseCategoryEditor';
+import { ExpenseCategoryForm } from './ExpenseCategoryForm';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ExpenseCategory } from '@/types/budget';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 export function CategoryAllocation() {
   const {
@@ -28,6 +31,7 @@ export function CategoryAllocation() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<ExpenseCategory | null>(null);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   // Calculate total income per income category
   const incomeByCategory = incomes.reduce((acc, inc) => {
@@ -110,14 +114,30 @@ export function CategoryAllocation() {
   };
   return <>
       <Card className="glass-card">
-        <CardHeader className="flex flex-row items-center justify-between gap-2 p-4 md:p-6">
+        <CardHeader className="flex flex-row items-center justify-between gap-2 p-3 md:p-6">
           <div className="flex items-center gap-2">
             <CardTitle className="text-base md:text-lg">Категории расходов</CardTitle>
             <Badge variant={allocationPercent >= 100 ? 'default' : 'secondary'} className="text-xs">
               {allocationPercent}%
             </Badge>
           </div>
-          <QuickCategoryAdd type="expense" />
+          <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="sm" className="gap-1 h-8 text-muted-foreground hover:text-foreground">
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Добавить</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-4 md:p-6">
+              <DialogHeader className="pb-2">
+                <DialogTitle>Новая категория расхода</DialogTitle>
+              </DialogHeader>
+              <ExpenseCategoryForm 
+                onClose={() => setAddDialogOpen(false)} 
+                onSuccess={() => setAddDialogOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
         </CardHeader>
         <CardContent className="space-y-3 md:space-y-4 p-4 md:p-6 pt-0 md:pt-0">
           {isMobile && expenseCategories.length > 0}

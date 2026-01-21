@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useIncomeCategories, useAddExpenseCategory, useUpdateExpenseCategory } from '@/hooks/useBudget';
 import { useExpenseCategoryAllocations, useBulkSaveAllocations } from '@/hooks/useAllocations';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -151,39 +150,38 @@ export function ExpenseCategoryForm({ category, isEditing = false, onClose, onSu
   };
 
   return (
-    <Card className="border-dashed border-primary/50">
-      <CardContent className="pt-4 space-y-4">
-        {/* Name */}
-        <div className="space-y-2">
-          <Label>Название</Label>
-          <Input
-            placeholder="Например: Кафе"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="bg-secondary/50"
-          />
-        </div>
+    <div className="space-y-4">
+      {/* Name */}
+      <div className="space-y-2">
+        <Label>Название</Label>
+        <Input
+          placeholder="Например: Кафе"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="bg-secondary/50"
+        />
+      </div>
 
-        {/* Emoji Grid */}
-        <div className="space-y-2">
-          <Label>Иконка</Label>
-          <div className="grid grid-cols-10 gap-1.5">
-            {CATEGORY_EMOJI_OPTIONS.map((emoji) => (
-              <button
-                key={emoji}
-                type="button"
-                onClick={() => setIcon(emoji)}
-                className={`w-9 h-9 rounded-lg flex items-center justify-center border-2 transition-all text-xl ${
-                  icon === emoji
-                    ? 'border-primary bg-primary/20 scale-110'
-                    : 'border-transparent bg-secondary/50 hover:bg-secondary'
-                }`}
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
+      {/* Emoji Grid - optimized for mobile */}
+      <div className="space-y-2">
+        <Label>Иконка</Label>
+        <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5">
+          {CATEGORY_EMOJI_OPTIONS.map((emoji) => (
+            <button
+              key={emoji}
+              type="button"
+              onClick={() => setIcon(emoji)}
+              className={`w-10 h-10 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center border-2 transition-all text-xl ${
+                icon === emoji
+                  ? 'border-primary bg-primary/20 scale-110'
+                  : 'border-transparent bg-secondary/50 hover:bg-secondary'
+              }`}
+            >
+              {emoji}
+            </button>
+          ))}
         </div>
+      </div>
 
         {/* Allocations Section */}
         <div className="space-y-3 pt-2">
@@ -313,16 +311,15 @@ export function ExpenseCategoryForm({ category, isEditing = false, onClose, onSu
           )}
         </div>
 
-        {/* Actions */}
-        <div className="flex gap-2 pt-2">
-          <Button onClick={handleSave} className="flex-1 gradient-primary">
-            {isEditing ? 'Сохранить' : 'Создать'}
-          </Button>
-          <Button variant="outline" onClick={onClose}>
-            Отмена
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+      {/* Actions */}
+      <div className="flex gap-2 pt-2">
+        <Button onClick={handleSave} className="flex-1 gradient-primary">
+          {isEditing ? 'Сохранить' : 'Создать'}
+        </Button>
+        <Button variant="outline" onClick={onClose}>
+          Отмена
+        </Button>
+      </div>
+    </div>
   );
 }
