@@ -10,17 +10,9 @@ export function Dashboard() {
   const incomeRef = useRef<HTMLDivElement>(null);
   const allocationRef = useRef<HTMLDivElement>(null);
 
-  const scrollToSection = (section: string) => {
-    const refs: Record<string, React.RefObject<HTMLDivElement>> = {
-      income: incomeRef,
-      allocation: allocationRef,
-    };
-    refs[section]?.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
   return (
     <div className="min-h-screen bg-background">
-      <Header onScrollTo={scrollToSection} />
+      <Header />
       
       <main className="container mx-auto px-3 md:px-4 py-4 md:py-8">
         {/* Category manager - hidden on mobile (available in burger menu) */}
