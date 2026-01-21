@@ -3,29 +3,33 @@ import { useAllAllocations } from '@/hooks/useAllocations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, Sector } from 'recharts';
 import { useState, useCallback } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
-const renderActiveShape = (props: any) => {
+const renderActiveShape = (props: any, isMobile: boolean) => {
   const {
     cx, cy, innerRadius, outerRadius, startAngle, endAngle,
     fill, payload, percent, value
   } = props;
 
+  const fontSize = isMobile ? 11 : 14;
+  const smallFontSize = isMobile ? 9 : 12;
+
   return (
     <g>
-      <text x={cx} y={cy - 10} textAnchor="middle" fill="hsl(var(--foreground))" className="text-sm font-medium">
+      <text x={cx} y={cy - 8} textAnchor="middle" fill="hsl(var(--foreground))" style={{ fontSize, fontWeight: 500 }}>
         {payload.name}
       </text>
-      <text x={cx} y={cy + 15} textAnchor="middle" fill="hsl(var(--muted-foreground))" className="text-xs">
+      <text x={cx} y={cy + 10} textAnchor="middle" fill="hsl(var(--muted-foreground))" style={{ fontSize: smallFontSize }}>
         {value.toLocaleString('ru-RU')} ₽
       </text>
-      <text x={cx} y={cy + 35} textAnchor="middle" fill="hsl(var(--muted-foreground))" className="text-xs">
+      <text x={cx} y={cy + 26} textAnchor="middle" fill="hsl(var(--muted-foreground))" style={{ fontSize: smallFontSize }}>
         {(percent * 100).toFixed(1)}%
       </text>
       <Sector
         cx={cx}
         cy={cy}
         innerRadius={innerRadius}
-        outerRadius={outerRadius + 8}
+        outerRadius={outerRadius + (isMobile ? 4 : 8)}
         startAngle={startAngle}
         endAngle={endAngle}
         fill={fill}
@@ -36,8 +40,8 @@ const renderActiveShape = (props: any) => {
         cy={cy}
         startAngle={startAngle}
         endAngle={endAngle}
-        innerRadius={outerRadius + 12}
-        outerRadius={outerRadius + 16}
+        innerRadius={outerRadius + (isMobile ? 6 : 12)}
+        outerRadius={outerRadius + (isMobile ? 8 : 16)}
         fill={fill}
         opacity={0.3}
       />
@@ -50,6 +54,7 @@ export function BudgetChart() {
   const { data: incomes = [] } = useIncomes();
   const { data: allAllocations = [] } = useAllAllocations();
   const [activeIndex, setActiveIndex] = useState<number | undefined>(undefined);
+  const isMobile = useIsMobile();
 
   // Calculate total income per income category
   const incomeByCategory = incomes.reduce((acc, inc) => {
@@ -98,33 +103,37 @@ export function BudgetChart() {
   if (chartData.length === 0) {
     return (
       <Card className="glass-card">
-        <CardHeader>
-          <CardTitle className="text-lg">Распределение бюджета</CardTitle>
+        <CardHeader className="p-4 md:p-6">
+          <CardTitle className="text-base md:text-lg">Распределение бюджета</CardTitle>
         </CardHeader>
-        <CardContent className="h-64 flex items-center justify-center text-muted-foreground">
+        <CardContent className="h-48 md:h-64 flex items-center justify-center text-muted-foreground text-sm text-center px-4">
           Добавьте доход и распределите по категориям
         </CardContent>
       </Card>
     );
   }
 
+  const innerRadius = isMobile ? 45 : 70;
+  const outerRadius = isMobile ? 70 : 100;
+  const chartHeight = isMobile ? 260 : 320;
+
   return (
     <Card className="glass-card">
-      <CardHeader>
-        <CardTitle className="text-lg">Распределение бюджета</CardTitle>
+      <CardHeader className="p-4 md:p-6">
+        <CardTitle className="text-base md:text-lg">Распределение бюджета</CardTitle>
       </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={320}>
+      <CardContent className="p-4 md:p-6 pt-0 md:pt-0">
+        <ResponsiveContainer width="100%" height={chartHeight}>
           <PieChart>
             <Pie
               activeIndex={activeIndex}
-              activeShape={renderActiveShape}
+              activeShape={(props: any) => renderActiveShape(props, isMobile)}
               data={chartData}
               cx="50%"
-              cy="50%"
-              innerRadius={70}
-              outerRadius={100}
-              paddingAngle={3}
+              cy="45%"
+              innerRadius={innerRadius}
+              outerRadius={outerRadius}
+              paddingAngle={2}
               dataKey="value"
               onMouseEnter={onPieEnter}
               onMouseLeave={onPieLeave}
@@ -151,15 +160,17 @@ export function BudgetChart() {
                 border: '1px solid hsl(var(--border))',
                 borderRadius: '8px',
                 boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                fontSize: isMobile ? '12px' : '14px',
               }}
             />
             <Legend 
               formatter={(value, entry: any) => (
-                <span className="text-sm">
-                  {value} ({(entry.payload.percent * 100).toFixed(1)}%)
+                <span style={{ fontSize: isMobile ? 11 : 14 }}>
+                  {isMobile && value.length > 10 ? value.substring(0, 10) + '...' : value} ({(entry.payload.percent * 100).toFixed(0)}%)
                 </span>
               )}
-              wrapperStyle={{ paddingTop: '20px' }}
+              wrapperStyle={{ paddingTop: isMobile ? '10px' : '20px' }}
+              iconSize={isMobile ? 8 : 10}
             />
           </PieChart>
         </ResponsiveContainer>
