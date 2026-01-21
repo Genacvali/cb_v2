@@ -26,6 +26,18 @@ export interface ExpenseCategory {
   allocation_type: 'percentage' | 'fixed';
   allocation_value: number;
   created_at: string;
+  allocations?: ExpenseCategoryAllocation[];
+}
+
+export interface ExpenseCategoryAllocation {
+  id: string;
+  user_id: string;
+  expense_category_id: string;
+  income_category_id: string;
+  allocation_type: 'percentage' | 'fixed';
+  allocation_value: number;
+  created_at: string;
+  income_category?: IncomeCategory;
 }
 
 export interface Income {

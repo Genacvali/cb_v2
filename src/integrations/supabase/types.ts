@@ -47,6 +47,51 @@ export type Database = {
         }
         Relationships: []
       }
+      expense_category_allocations: {
+        Row: {
+          allocation_type: string
+          allocation_value: number
+          created_at: string
+          expense_category_id: string
+          id: string
+          income_category_id: string
+          user_id: string
+        }
+        Insert: {
+          allocation_type?: string
+          allocation_value?: number
+          created_at?: string
+          expense_category_id: string
+          id?: string
+          income_category_id: string
+          user_id: string
+        }
+        Update: {
+          allocation_type?: string
+          allocation_value?: number
+          created_at?: string
+          expense_category_id?: string
+          id?: string
+          income_category_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_category_allocations_expense_category_id_fkey"
+            columns: ["expense_category_id"]
+            isOneToOne: false
+            referencedRelation: "expense_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expense_category_allocations_income_category_id_fkey"
+            columns: ["income_category_id"]
+            isOneToOne: false
+            referencedRelation: "income_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       income_categories: {
         Row: {
           color: string | null
