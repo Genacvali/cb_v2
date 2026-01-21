@@ -301,23 +301,6 @@ export function CategoryManager() {
                         className="bg-secondary/50"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label>Иконка</Label>
-                      <div className="grid grid-cols-10 gap-1.5">
-                        {CATEGORY_EMOJI_OPTIONS.map(emoji => (
-                          <button
-                            key={emoji}
-                            type="button"
-                            onClick={() => setNewCategory(prev => ({ ...prev, icon: emoji }))}
-                            className={`w-9 h-9 rounded-lg flex items-center justify-center border-2 transition-all text-xl ${
-                              newCategory.icon === emoji ? 'border-primary bg-primary/20 scale-110' : 'border-transparent bg-secondary/50 hover:bg-secondary'
-                            }`}
-                          >
-                            {emoji}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
                     <div className="flex gap-2 pt-2">
                       <Button onClick={handleAddIncomeCategory} className="flex-1 gradient-primary">
                         Создать
@@ -340,11 +323,6 @@ export function CategoryManager() {
                     className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/30 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <div 
-                        className="w-12 h-12 rounded-xl flex items-center justify-center bg-secondary/50"
-                      >
-                        <CategoryIcon icon={cat.icon} className="w-6 h-6" />
-                      </div>
                       <span className="font-medium">{cat.name}</span>
                     </div>
                     <div className="flex items-center gap-1">
@@ -400,23 +378,6 @@ export function CategoryManager() {
                 onChange={(e) => setNewCategory(prev => ({ ...prev, name: e.target.value }))}
                 className="bg-secondary/50"
               />
-            </div>
-            <div className="space-y-2">
-              <Label>Иконка</Label>
-              <div className="grid grid-cols-10 gap-1.5">
-                {CATEGORY_EMOJI_OPTIONS.map(emoji => (
-                  <button
-                    key={emoji}
-                    type="button"
-                    onClick={() => setNewCategory(prev => ({ ...prev, icon: emoji }))}
-                    className={`w-9 h-9 rounded-lg flex items-center justify-center border-2 transition-all text-xl ${
-                      newCategory.icon === emoji ? 'border-primary bg-primary/20 scale-110' : 'border-transparent bg-secondary/50 hover:bg-secondary'
-                    }`}
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
             </div>
           </div>
           <DialogFooter>
