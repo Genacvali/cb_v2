@@ -5,14 +5,13 @@ import {
   useDeleteIncomeCategory, 
   useDeleteExpenseCategory,
   useAddIncomeCategory,
-  useAddExpenseCategory,
   useUpdateIncomeCategory
 } from '@/hooks/useBudget';
 import { useAllAllocations } from '@/hooks/useAllocations';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/ui/card';
 import { CategoryIcon } from '@/components/icons/CategoryIcon';
 import { 
   Dialog, 
@@ -39,18 +38,8 @@ import { Plus, Pencil, Trash2, TrendingUp, TrendingDown, Settings } from 'lucide
 import { toast } from 'sonner';
 import { IncomeCategory, ExpenseCategory } from '@/types/budget';
 import { ExpenseCategoryEditor } from './ExpenseCategoryEditor';
-
-const ICON_OPTIONS = [
-  'wallet', 'briefcase', 'banknote', 'laptop', 'folder', 'message-circle',
-  'trending-up', 'gift', 'shopping-cart', 'car', 'home', 'gamepad-2',
-  'piggy-bank', 'more-horizontal', 'file-text', 'wrench', 'book-open',
-  'baby', 'heart-pulse', 'plane', 'coffee', 'utensils', 'shirt', 'smartphone'
-];
-
-const COLOR_OPTIONS = [
-  '#10B981', '#06B6D4', '#8B5CF6', '#F59E0B', '#3B82F6', 
-  '#EF4444', '#EC4899', '#22C55E', '#6B7280', '#14B8A6'
-];
+import { ExpenseCategoryForm } from './ExpenseCategoryForm';
+import { CATEGORY_ICON_OPTIONS, CATEGORY_COLOR_OPTIONS } from '@/constants/categoryOptions';
 
 interface CategoryFormData {
   name: string;
@@ -65,7 +54,6 @@ export function CategoryManager() {
   const deleteIncomeCategory = useDeleteIncomeCategory();
   const deleteExpenseCategory = useDeleteExpenseCategory();
   const addIncomeCategory = useAddIncomeCategory();
-  const addExpenseCategory = useAddExpenseCategory();
   const updateIncomeCategory = useUpdateIncomeCategory();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -74,8 +62,8 @@ export function CategoryManager() {
   const [editingExpenseCategory, setEditingExpenseCategory] = useState<ExpenseCategory | null>(null);
   const [expenseEditDialogOpen, setExpenseEditDialogOpen] = useState(false);
   const [newCategory, setNewCategory] = useState<CategoryFormData>({ name: '', icon: 'wallet', color: '#10B981' });
-  const [categoryType, setCategoryType] = useState<'income' | 'expense'>('income');
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showAddIncomeForm, setShowAddIncomeForm] = useState(false);
+  const [showAddExpenseForm, setShowAddExpenseForm] = useState(false);
 
   const handleDeleteIncome = async (id: string) => {
     try {
@@ -95,25 +83,17 @@ export function CategoryManager() {
     }
   };
 
-  const handleAddCategory = async () => {
+  const handleAddIncomeCategory = async () => {
     if (!newCategory.name.trim()) {
       toast.error('Введите название категории');
       return;
     }
 
     try {
-      if (categoryType === 'income') {
-        await addIncomeCategory.mutateAsync(newCategory);
-      } else {
-        await addExpenseCategory.mutateAsync({
-          ...newCategory,
-          allocation_type: 'percentage',
-          allocation_value: 0
-        });
-      }
+      await addIncomeCategory.mutateAsync(newCategory);
       toast.success('Категория добавлена');
       setNewCategory({ name: '', icon: 'wallet', color: '#10B981' });
-      setShowAddForm(false);
+      setShowAddIncomeForm(false);
     } catch {
       toast.error('Ошибка при добавлении');
     }
@@ -202,78 +182,23 @@ export function CategoryManager() {
                 <h3 className="text-sm font-medium text-muted-foreground">
                   Категории расходов ({expenseCategories.length})
                 </h3>
-                <Button 
-                  size="sm" 
-                  onClick={() => {
-                    setCategoryType('expense');
-                    setNewCategory({ name: '', icon: 'shopping-cart', color: '#F59E0B' });
-                    setShowAddForm(true);
-                  }}
-                  className="gap-1"
-                >
-                  <Plus className="w-4 h-4" />
-                  Добавить
-                </Button>
+                {!showAddExpenseForm && (
+                  <Button 
+                    size="sm" 
+                    onClick={() => setShowAddExpenseForm(true)}
+                    className="gap-1"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Добавить
+                  </Button>
+                )}
               </div>
               
-              {showAddForm && categoryType === 'expense' && (
-                <Card className="border-dashed border-primary/50">
-                  <CardContent className="pt-4 space-y-4">
-                    <div className="space-y-2">
-                      <Label>Название</Label>
-                      <Input 
-                        placeholder="Например: Кафе"
-                        value={newCategory.name}
-                        onChange={(e) => setNewCategory(prev => ({ ...prev, name: e.target.value }))}
-                        className="bg-secondary/50"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Иконка</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {ICON_OPTIONS.slice(0, 12).map(icon => (
-                          <button
-                            key={icon}
-                            type="button"
-                            onClick={() => setNewCategory(prev => ({ ...prev, icon }))}
-                            className={`w-10 h-10 rounded-lg flex items-center justify-center border-2 transition-colors ${
-                              newCategory.icon === icon ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/50'
-                            }`}
-                          >
-                            <CategoryIcon icon={icon} color={newCategory.color} className="w-5 h-5" />
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Цвет</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {COLOR_OPTIONS.map(color => (
-                          <button
-                            key={color}
-                            type="button"
-                            onClick={() => setNewCategory(prev => ({ ...prev, color }))}
-                            className={`w-8 h-8 rounded-full transition-transform ${
-                              newCategory.color === color ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110' : 'hover:scale-105'
-                            }`}
-                            style={{ backgroundColor: color }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex gap-2 pt-2">
-                      <Button onClick={handleAddCategory} className="flex-1 gradient-primary">
-                        Создать
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        onClick={() => setShowAddForm(false)}
-                      >
-                        Отмена
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+              {showAddExpenseForm && (
+                <ExpenseCategoryForm
+                  onClose={() => setShowAddExpenseForm(false)}
+                  onSuccess={() => setShowAddExpenseForm(false)}
+                />
               )}
               
               <div className="space-y-2">
@@ -355,9 +280,8 @@ export function CategoryManager() {
                 <Button 
                   size="sm" 
                   onClick={() => {
-                    setCategoryType('income');
                     setNewCategory({ name: '', icon: 'wallet', color: '#10B981' });
-                    setShowAddForm(true);
+                    setShowAddIncomeForm(true);
                   }}
                   className="gap-1"
                 >
@@ -366,7 +290,7 @@ export function CategoryManager() {
                 </Button>
               </div>
               
-              {showAddForm && categoryType === 'income' && (
+              {showAddIncomeForm && (
                 <Card className="border-dashed border-primary/50">
                   <CardContent className="pt-4 space-y-4">
                     <div className="space-y-2">
@@ -380,17 +304,17 @@ export function CategoryManager() {
                     </div>
                     <div className="space-y-2">
                       <Label>Иконка</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {ICON_OPTIONS.slice(0, 12).map(icon => (
+                      <div className="grid grid-cols-10 gap-1.5">
+                        {CATEGORY_ICON_OPTIONS.map(icon => (
                           <button
                             key={icon}
                             type="button"
                             onClick={() => setNewCategory(prev => ({ ...prev, icon }))}
-                            className={`w-10 h-10 rounded-lg flex items-center justify-center border-2 transition-colors ${
-                              newCategory.icon === icon ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/50'
+                            className={`w-9 h-9 rounded-lg flex items-center justify-center border-2 transition-all ${
+                              newCategory.icon === icon ? 'border-primary bg-primary/20 scale-110' : 'border-transparent bg-secondary/50 hover:bg-secondary'
                             }`}
                           >
-                            <CategoryIcon icon={icon} color={newCategory.color} className="w-5 h-5" />
+                            <CategoryIcon icon={icon} color={newCategory.color} className="w-4 h-4" />
                           </button>
                         ))}
                       </div>
@@ -398,7 +322,7 @@ export function CategoryManager() {
                     <div className="space-y-2">
                       <Label>Цвет</Label>
                       <div className="flex flex-wrap gap-2">
-                        {COLOR_OPTIONS.map(color => (
+                        {CATEGORY_COLOR_OPTIONS.map(color => (
                           <button
                             key={color}
                             type="button"
@@ -412,12 +336,12 @@ export function CategoryManager() {
                       </div>
                     </div>
                     <div className="flex gap-2 pt-2">
-                      <Button onClick={handleAddCategory} className="flex-1 gradient-primary">
+                      <Button onClick={handleAddIncomeCategory} className="flex-1 gradient-primary">
                         Создать
                       </Button>
                       <Button 
                         variant="outline" 
-                        onClick={() => setShowAddForm(false)}
+                        onClick={() => setShowAddIncomeForm(false)}
                       >
                         Отмена
                       </Button>
@@ -497,17 +421,17 @@ export function CategoryManager() {
             </div>
             <div className="space-y-2">
               <Label>Иконка</Label>
-              <div className="flex flex-wrap gap-2">
-                {ICON_OPTIONS.map(icon => (
+              <div className="grid grid-cols-10 gap-1.5">
+                {CATEGORY_ICON_OPTIONS.map(icon => (
                   <button
                     key={icon}
                     type="button"
                     onClick={() => setNewCategory(prev => ({ ...prev, icon }))}
-                    className={`w-10 h-10 rounded-lg flex items-center justify-center border-2 transition-colors ${
-                      newCategory.icon === icon ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/50'
+                    className={`w-9 h-9 rounded-lg flex items-center justify-center border-2 transition-all ${
+                      newCategory.icon === icon ? 'border-primary bg-primary/20 scale-110' : 'border-transparent bg-secondary/50 hover:bg-secondary'
                     }`}
                   >
-                    <CategoryIcon icon={icon} color={newCategory.color} className="w-5 h-5" />
+                    <CategoryIcon icon={icon} color={newCategory.color} className="w-4 h-4" />
                   </button>
                 ))}
               </div>
@@ -515,7 +439,7 @@ export function CategoryManager() {
             <div className="space-y-2">
               <Label>Цвет</Label>
               <div className="flex flex-wrap gap-2">
-                {COLOR_OPTIONS.map(color => (
+                {CATEGORY_COLOR_OPTIONS.map(color => (
                   <button
                     key={color}
                     type="button"

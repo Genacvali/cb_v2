@@ -123,10 +123,13 @@ export function useAddExpenseCategory() {
   return useMutation({
     mutationFn: async (category: Omit<ExpenseCategory, 'id' | 'user_id' | 'created_at'>) => {
       if (!user) throw new Error('Not authenticated');
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('expense_categories')
-        .insert({ ...category, user_id: user.id });
+        .insert({ ...category, user_id: user.id })
+        .select()
+        .single();
       if (error) throw error;
+      return data as ExpenseCategory;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['expense-categories'] });
