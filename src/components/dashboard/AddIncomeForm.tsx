@@ -56,17 +56,17 @@ export function AddIncomeForm() {
 
   return (
     <Card className="glass-card">
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Plus className="w-5 h-5" />
+      <CardHeader className="p-4 md:p-6">
+        <CardTitle className="text-base md:text-lg flex items-center gap-2">
+          <Plus className="w-4 h-4 md:w-5 md:h-5" />
           Добавить доход
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="amount">Сумма *</Label>
+      <CardContent className="p-4 md:p-6 pt-0 md:pt-0">
+        <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
+            <div className="space-y-1.5 md:space-y-2">
+              <Label htmlFor="amount" className="text-sm">Сумма *</Label>
               <Input
                 id="amount"
                 type="number"
@@ -76,13 +76,14 @@ export function AddIncomeForm() {
                 min="0"
                 step="0.01"
                 required
+                className="h-10 md:h-11"
               />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="category">Категория *</Label>
+            <div className="space-y-1.5 md:space-y-2">
+              <Label htmlFor="category" className="text-sm">Категория *</Label>
               <Select value={categoryId} onValueChange={setCategoryId}>
-                <SelectTrigger>
+                <SelectTrigger className="h-10 md:h-11">
                   <SelectValue placeholder="Выберите категорию" />
                 </SelectTrigger>
                 <SelectContent>
@@ -99,19 +100,20 @@ export function AddIncomeForm() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Описание</Label>
+          <div className="space-y-1.5 md:space-y-2">
+            <Label htmlFor="description" className="text-sm">Описание</Label>
             <Input
               id="description"
               placeholder="Например: Зарплата за январь"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              className="h-10 md:h-11"
             />
           </div>
 
           <Button 
             type="submit" 
-            className="w-full gradient-primary hover:opacity-90"
+            className="w-full gradient-primary hover:opacity-90 h-10 md:h-11 text-sm md:text-base"
             disabled={addIncome.isPending}
           >
             {addIncome.isPending ? (

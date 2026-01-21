@@ -8,27 +8,36 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { LogOut, User, Wallet } from 'lucide-react';
+import { MobileNav } from './MobileNav';
 
-export function Header() {
+interface HeaderProps {
+  onScrollTo?: (section: string) => void;
+}
+
+export function Header({ onScrollTo }: HeaderProps) {
   const { user, signOut } = useAuth();
 
   const initials = user?.email?.substring(0, 2).toUpperCase() || 'U';
 
   return (
     <header className="sticky top-0 z-50 glass-card border-b border-border/50">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-md">
-            <Wallet className="w-5 h-5 text-white" />
+      <div className="container mx-auto px-4 h-14 md:h-16 flex items-center justify-between">
+        <div className="flex items-center gap-2 md:gap-3">
+          {/* Mobile burger menu */}
+          <MobileNav onScrollTo={onScrollTo} />
+          
+          <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl gradient-primary flex items-center justify-center shadow-md">
+            <Wallet className="w-4 h-4 md:w-5 md:h-5 text-white" />
           </div>
-          <h1 className="text-xl font-bold gradient-text">CrystalBudget</h1>
+          <h1 className="text-lg md:text-xl font-bold gradient-text">CrystalBudget</h1>
         </div>
 
+        {/* Desktop dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-              <Avatar className="h-10 w-10">
-                <AvatarFallback className="gradient-primary text-white font-medium">
+            <Button variant="ghost" className="relative h-8 w-8 md:h-10 md:w-10 rounded-full hidden md:flex">
+              <Avatar className="h-8 w-8 md:h-10 md:w-10">
+                <AvatarFallback className="gradient-primary text-white font-medium text-sm">
                   {initials}
                 </AvatarFallback>
               </Avatar>

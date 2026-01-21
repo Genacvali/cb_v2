@@ -35,19 +35,19 @@ export function StatsCards() {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+    <div className="grid grid-cols-3 gap-2 md:gap-4 mb-4 md:mb-8">
       {stats.map((stat) => (
         <Card key={stat.title} className="glass-card hover-lift overflow-hidden">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">
+          <CardContent className="p-3 md:p-6">
+            <div className="flex flex-col md:flex-row items-center md:justify-between gap-2">
+              <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-lg flex-shrink-0 md:order-2`}>
+                <stat.icon className="w-5 h-5 md:w-6 md:h-6 text-white" />
+              </div>
+              <div className="text-center md:text-left md:order-1">
+                <p className="text-[10px] md:text-sm font-medium text-muted-foreground mb-0.5 md:mb-1 leading-tight">
                   {stat.title}
                 </p>
-                <p className="text-2xl font-bold">{stat.value}</p>
-              </div>
-              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-lg`}>
-                <stat.icon className="w-6 h-6 text-white" />
+                <p className="text-sm md:text-2xl font-bold">{stat.value}</p>
               </div>
             </div>
           </CardContent>
