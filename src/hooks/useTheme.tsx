@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext } from 'react';
+import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 
 export type Theme = 'light' | 'dark' | 'night' | 'pink' | 'ebony';
 
@@ -11,18 +11,23 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const THEME_STORAGE_KEY = 'budget-theme';
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(THEME_STORAGE_KEY) as Theme;
-      if (stored && ['light', 'dark', 'night', 'pink', 'ebony'].includes(stored)) {
-        return stored;
-      }
-    }
-    return 'light';
-  });
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [theme, setThemeState] = useState<Theme>('light');
+  const [mounted, setMounted] = useState(false);
 
+  // Initialize theme from localStorage after mount
   useEffect(() => {
+    const stored = localStorage.getItem(THEME_STORAGE_KEY) as Theme;
+    if (stored && ['light', 'dark', 'night', 'pink', 'ebony'].includes(stored)) {
+      setThemeState(stored);
+    }
+    setMounted(true);
+  }, []);
+
+  // Apply theme to document
+  useEffect(() => {
+    if (!mounted) return;
+    
     const root = document.documentElement;
     
     // Remove all theme classes
@@ -33,7 +38,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     
     // Store preference
     localStorage.setItem(THEME_STORAGE_KEY, theme);
-  }, [theme]);
+  }, [theme, mounted]);
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
