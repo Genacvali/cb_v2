@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { CategoryIcon } from '@/components/icons/CategoryIcon';
+import { QuickCategoryAdd } from './QuickCategoryAdd';
 import { Plus, Loader2, Wallet } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -68,11 +69,12 @@ export function AddIncomeForm() {
 
   return (
     <Card className="glass-card">
-      <CardHeader className="p-4 md:p-6">
+      <CardHeader className="p-4 md:p-6 flex flex-row items-center justify-between">
         <CardTitle className="text-base md:text-lg flex items-center gap-2">
           <Plus className="w-4 h-4 md:w-5 md:h-5" />
           Добавить доход
         </CardTitle>
+        <QuickCategoryAdd type="income" />
       </CardHeader>
       <CardContent className="p-4 md:p-6 pt-0 md:pt-0">
         <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
@@ -118,14 +120,20 @@ export function AddIncomeForm() {
                   <SelectValue placeholder="Выберите категорию" />
                 </SelectTrigger>
                 <SelectContent>
-                  {incomeCategories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      <div className="flex items-center gap-2">
-                        <CategoryIcon icon={cat.icon} color={cat.color} className="w-4 h-4" />
-                        {cat.name}
-                      </div>
-                    </SelectItem>
-                  ))}
+                  {incomeCategories.length === 0 ? (
+                    <div className="py-3 px-2 text-center text-sm text-muted-foreground">
+                      Нет категорий. Нажмите «Добавить» выше.
+                    </div>
+                  ) : (
+                    incomeCategories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        <div className="flex items-center gap-2">
+                          <CategoryIcon icon={cat.icon} className="w-4 h-4" />
+                          {cat.name}
+                        </div>
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
