@@ -42,7 +42,7 @@ export function QuickCategoryAdd({ type, onSuccess }: Props) {
       } else {
         await addIncomeCategory.mutateAsync({
           name,
-          icon,
+          icon: '💰', // Default icon for income
           color: DEFAULT_CATEGORY_COLOR,
         });
       }
@@ -92,30 +92,32 @@ export function QuickCategoryAdd({ type, onSuccess }: Props) {
           </div>
           
           <div className="flex gap-2">
-            {/* Emoji picker - small preview */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <button className="w-10 h-10 rounded-lg bg-secondary/50 hover:bg-secondary flex items-center justify-center text-xl border-2 border-transparent hover:border-primary/30 transition-all">
-                  {icon}
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-2 bg-popover border shadow-lg" align="start">
-                <div className="grid grid-cols-8 gap-1">
-                  {CATEGORY_EMOJI_OPTIONS.map((emoji) => (
-                    <button
-                      key={emoji}
-                      type="button"
-                      onClick={() => setIcon(emoji)}
-                      className={`w-8 h-8 rounded flex items-center justify-center text-lg hover:bg-secondary transition-colors ${
-                        icon === emoji ? 'bg-primary/20 ring-1 ring-primary' : ''
-                      }`}
-                    >
-                      {emoji}
-                    </button>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
+            {/* Emoji picker - only for expense */}
+            {type === 'expense' && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="w-10 h-10 rounded-lg bg-secondary/50 hover:bg-secondary flex items-center justify-center text-xl border-2 border-transparent hover:border-primary/30 transition-all shrink-0">
+                    {icon}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-2 bg-popover border shadow-lg" align="start">
+                  <div className="grid grid-cols-8 gap-1">
+                    {CATEGORY_EMOJI_OPTIONS.map((emoji) => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        onClick={() => setIcon(emoji)}
+                        className={`w-8 h-8 rounded flex items-center justify-center text-lg hover:bg-secondary transition-colors ${
+                          icon === emoji ? 'bg-primary/20 ring-1 ring-primary' : ''
+                        }`}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
             
             <Input
               placeholder="Название..."

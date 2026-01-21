@@ -81,10 +81,7 @@ export function AddIncomeForm() {
             <SelectTrigger className="w-[140px] h-10 shrink-0">
               <SelectValue placeholder="Категория">
                 {selectedCategory && (
-                  <span className="flex items-center gap-1.5">
-                    <CategoryIcon icon={selectedCategory.icon} className="w-4 h-4" />
-                    <span className="truncate">{selectedCategory.name}</span>
-                  </span>
+                  <span className="truncate">{selectedCategory.name}</span>
                 )}
               </SelectValue>
             </SelectTrigger>
@@ -94,14 +91,11 @@ export function AddIncomeForm() {
                   Нажмите «Добавить» ↗
                 </div>
               ) : (
-                incomeCategories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>
-                    <div className="flex items-center gap-2">
-                      <CategoryIcon icon={cat.icon} className="w-4 h-4" />
-                      {cat.name}
-                    </div>
-                  </SelectItem>
-                ))
+                    incomeCategories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </SelectItem>
+                    ))
               )}
             </SelectContent>
           </Select>
