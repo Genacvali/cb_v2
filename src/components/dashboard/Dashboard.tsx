@@ -31,12 +31,11 @@ export function Dashboard() {
         <StatsCards />
         
         <div className="grid lg:grid-cols-2 gap-4 md:gap-6">
-          <div className="space-y-4 md:space-y-6">
-            <div ref={incomeRef}>
-              <AddIncomeForm />
-            </div>
-            <BudgetChart />
+        <div className="space-y-4 md:space-y-6">
+          <div ref={incomeRef}>
+            <AddIncomeForm />
           </div>
+        </div>
           
           <div ref={allocationRef}>
             <CategoryAllocation />
