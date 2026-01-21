@@ -62,14 +62,20 @@ export function AddIncomeForm() {
           <button
             type="button"
             onClick={() => setIsStartingBalance(!isStartingBalance)}
-            className={`text-xs px-2 py-1 rounded-full transition-colors ${
+            className={`text-xs px-2 py-1 rounded-full transition-colors flex items-center gap-1 ${
               isStartingBalance 
                 ? 'bg-primary text-primary-foreground' 
                 : 'bg-secondary text-muted-foreground hover:text-foreground'
             }`}
+            title="Записать как начальный остаток на счёте"
           >
-            <Wallet className="w-3 h-3 inline mr-1" />
-            Баланс
+            <Wallet className="w-3 h-3" />
+            <span className="hidden sm:inline">
+              {isStartingBalance ? 'Начальный остаток ✓' : 'Начальный остаток'}
+            </span>
+            <span className="sm:hidden">
+              {isStartingBalance ? '₽ Остаток ✓' : '₽ Остаток'}
+            </span>
           </button>
           <QuickCategoryAdd type="income" />
         </div>
