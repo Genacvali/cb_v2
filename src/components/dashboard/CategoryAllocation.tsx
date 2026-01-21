@@ -1,51 +1,52 @@
-import { useExpenseCategories, useIncomes, useUpdateExpenseCategory } from '@/hooks/useBudget';
+import { useExpenseCategories, useIncomes } from '@/hooks/useBudget';
+import { useAllAllocations } from '@/hooks/useAllocations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { CategoryIcon } from '@/components/icons/CategoryIcon';
-import { Percent, Banknote } from 'lucide-react';
-import { useState } from 'react';
 
 export function CategoryAllocation() {
   const { data: expenseCategories = [] } = useExpenseCategories();
   const { data: incomes = [] } = useIncomes();
-  const updateCategory = useUpdateExpenseCategory();
-  
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editValue, setEditValue] = useState('');
+  const { data: allAllocations = [] } = useAllAllocations();
+
+  // Calculate total income per income category
+  const incomeByCategory = incomes.reduce((acc, inc) => {
+    const catId = inc.category_id || 'uncategorized';
+    acc[catId] = (acc[catId] || 0) + Number(inc.amount);
+    return acc;
+  }, {} as Record<string, number>);
 
   const totalIncome = incomes.reduce((sum, inc) => sum + Number(inc.amount), 0);
 
-  const totalAllocatedPercent = expenseCategories
-    .filter(c => c.allocation_type === 'percentage')
-    .reduce((sum, c) => sum + c.allocation_value, 0);
-
-  const handleUpdateValue = async (id: string) => {
-    const value = parseFloat(editValue);
-    if (isNaN(value)) return;
+  // Calculate allocated amounts for each expense category
+  const getCategoryAllocation = (categoryId: string) => {
+    const categoryAllocations = allAllocations.filter(a => a.expense_category_id === categoryId);
     
-    await updateCategory.mutateAsync({ id, allocation_value: value });
-    setEditingId(null);
-    setEditValue('');
+    let totalAllocated = 0;
+    for (const allocation of categoryAllocations) {
+      const sourceIncome = incomeByCategory[allocation.income_category_id] || 0;
+      if (allocation.allocation_type === 'percentage') {
+        totalAllocated += (sourceIncome * allocation.allocation_value) / 100;
+      } else {
+        totalAllocated += allocation.allocation_value;
+      }
+    }
+    return totalAllocated;
   };
 
-  const toggleType = async (id: string, currentType: 'percentage' | 'fixed') => {
-    const newType = currentType === 'percentage' ? 'fixed' : 'percentage';
-    await updateCategory.mutateAsync({ 
-      id, 
-      allocation_type: newType,
-      allocation_value: 0,
-    });
-  };
+  const totalAllocated = expenseCategories.reduce((sum, cat) => {
+    return sum + getCategoryAllocation(cat.id);
+  }, 0);
+
+  const allocationPercent = totalIncome > 0 ? Math.round((totalAllocated / totalIncome) * 100) : 0;
 
   return (
     <Card className="glass-card">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg">Распределение по категориям</CardTitle>
-        <Badge variant={totalAllocatedPercent === 100 ? 'default' : 'secondary'}>
-          {totalAllocatedPercent}% распределено
+        <Badge variant={allocationPercent >= 100 ? 'default' : 'secondary'}>
+          {allocationPercent}% распределено
         </Badge>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -55,13 +56,9 @@ export function CategoryAllocation() {
           </p>
         ) : (
           expenseCategories.map((cat) => {
-            const amount = cat.allocation_type === 'percentage'
-              ? (totalIncome * cat.allocation_value) / 100
-              : cat.allocation_value;
-            
-            const progressValue = cat.allocation_type === 'percentage'
-              ? cat.allocation_value
-              : totalIncome > 0 ? (cat.allocation_value / totalIncome) * 100 : 0;
+            const amount = getCategoryAllocation(cat.id);
+            const progressValue = totalIncome > 0 ? (amount / totalIncome) * 100 : 0;
+            const categoryAllocations = allAllocations.filter(a => a.expense_category_id === cat.id);
 
             return (
               <div key={cat.id} className="space-y-2">
@@ -73,56 +70,24 @@ export function CategoryAllocation() {
                     >
                       <CategoryIcon icon={cat.icon} color={cat.color} className="w-4 h-4" />
                     </div>
-                    <span className="font-medium">{cat.name}</span>
+                    <div>
+                      <span className="font-medium">{cat.name}</span>
+                      {categoryAllocations.length > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          {categoryAllocations.map((a, i) => (
+                            <span key={a.id}>
+                              {a.income_category?.name}: {a.allocation_type === 'percentage' ? `${a.allocation_value}%` : `${a.allocation_value.toLocaleString('ru-RU')}₽`}
+                              {i < categoryAllocations.length - 1 && ' • '}
+                            </span>
+                          ))}
+                        </p>
+                      )}
+                    </div>
                   </div>
                   
-                  <div className="flex items-center gap-2">
-                    {editingId === cat.id ? (
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="number"
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          className="w-20 h-8"
-                          placeholder="0"
-                          autoFocus
-                        />
-                        <Button 
-                          size="sm" 
-                          onClick={() => handleUpdateValue(cat.id)}
-                          className="h-8"
-                        >
-                          ОК
-                        </Button>
-                      </div>
-                    ) : (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 px-2"
-                          onClick={() => toggleType(cat.id, cat.allocation_type)}
-                        >
-                          {cat.allocation_type === 'percentage' ? (
-                            <Percent className="w-4 h-4" />
-                          ) : (
-                            <Banknote className="w-4 h-4" />
-                          )}
-                        </Button>
-                        <button
-                          onClick={() => {
-                            setEditingId(cat.id);
-                            setEditValue(cat.allocation_value.toString());
-                          }}
-                          className="text-sm font-medium hover:underline"
-                        >
-                          {cat.allocation_type === 'percentage'
-                            ? `${cat.allocation_value}%`
-                            : `${cat.allocation_value.toLocaleString('ru-RU')} ₽`}
-                        </button>
-                      </>
-                    )}
-                  </div>
+                  <span className="text-sm font-medium">
+                    {amount.toLocaleString('ru-RU')} ₽
+                  </span>
                 </div>
                 
                 <div className="flex items-center gap-3">
@@ -130,16 +95,27 @@ export function CategoryAllocation() {
                     value={progressValue} 
                     className="h-2 flex-1"
                     style={{ 
-                      ['--progress-color' as any]: cat.color,
+                      ['--progress-color' as string]: cat.color,
                     }}
                   />
-                  <span className="text-sm text-muted-foreground w-24 text-right">
-                    {amount.toLocaleString('ru-RU')} ₽
+                  <span className="text-xs text-muted-foreground w-12 text-right">
+                    {Math.round(progressValue)}%
                   </span>
                 </div>
               </div>
             );
           })
+        )}
+
+        {totalIncome > 0 && (
+          <div className="pt-4 mt-4 border-t border-border">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Нераспределено</span>
+              <span className="font-medium">
+                {(totalIncome - totalAllocated).toLocaleString('ru-RU')} ₽
+              </span>
+            </div>
+          </div>
         )}
       </CardContent>
     </Card>
