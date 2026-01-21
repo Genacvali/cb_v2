@@ -21,7 +21,7 @@ export function Header() {
           <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-md">
             <Wallet className="w-5 h-5 text-white" />
           </div>
-          <h1 className="text-xl font-bold gradient-text">BudgetFlow</h1>
+          <h1 className="text-xl font-bold gradient-text">CrystalBudget</h1>
         </div>
 
         <DropdownMenu>

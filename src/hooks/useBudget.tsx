@@ -185,6 +185,23 @@ export function useDeleteIncomeCategory() {
   });
 }
 
+export function useUpdateIncomeCategory() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<IncomeCategory> & { id: string }) => {
+      const { error } = await supabase
+        .from('income_categories')
+        .update(updates)
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['income-categories'] });
+    },
+  });
+}
+
 export function useAddIncome() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
