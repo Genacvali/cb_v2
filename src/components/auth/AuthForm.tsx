@@ -97,13 +97,11 @@ export function AuthForm() {
         
         <Card className="w-full max-w-md glass-card relative z-10">
           <CardHeader className="text-center space-y-4">
-            <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-900 to-cyan-900 flex items-center justify-center shadow-lg overflow-hidden">
-              <img 
-                src={crystalLogo} 
-                alt="CrystalBudget" 
-                className="w-14 h-14 object-contain"
-              />
-            </div>
+            <img 
+              src={crystalLogo} 
+              alt="CrystalBudget" 
+              className="mx-auto w-16 h-16 object-cover rounded-2xl shadow-lg"
+            />
             <div>
               <CardTitle className="text-2xl font-bold">Сброс пароля</CardTitle>
               <CardDescription>Введите email для восстановления доступа</CardDescription>
@@ -162,13 +160,11 @@ export function AuthForm() {
       
       <Card className="w-full max-w-md glass-card relative z-10">
         <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-900 to-cyan-900 flex items-center justify-center shadow-lg overflow-hidden">
-            <img 
-              src={crystalLogo} 
-              alt="CrystalBudget" 
-              className="w-14 h-14 object-contain"
-            />
-          </div>
+          <img 
+            src={crystalLogo} 
+            alt="CrystalBudget" 
+            className="mx-auto w-16 h-16 object-cover rounded-2xl shadow-lg"
+          />
           <div>
             <CardTitle className="text-2xl font-bold">CrystalBudget</CardTitle>
             <CardDescription>Управляйте бюджетом с умом</CardDescription>
