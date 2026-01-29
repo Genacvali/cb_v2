@@ -2,8 +2,21 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string)?.trim() ?? '';
+const SUPABASE_PUBLISHABLE_KEY = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string)?.trim() ?? '';
+
+const envError =
+  'Не заданы переменные Supabase. Создайте файл .env в корне проекта с:\n' +
+  'VITE_SUPABASE_URL=https://ваш-проект.supabase.co\n' +
+  'VITE_SUPABASE_PUBLISHABLE_KEY=ваш_anon_key\n\n' +
+  'После изменения .env перезапустите dev-сервер (npm run dev) или пересоберите (npm run build).';
+
+if (!SUPABASE_URL || !SUPABASE_URL.startsWith('http')) {
+  throw new Error(envError);
+}
+if (!SUPABASE_PUBLISHABLE_KEY) {
+  throw new Error(envError);
+}
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
