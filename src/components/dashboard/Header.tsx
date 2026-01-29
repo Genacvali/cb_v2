@@ -24,12 +24,13 @@ export function Header() {
     <header className="sticky top-0 z-50 glass-card border-b border-border/50">
       <div className="container mx-auto px-4 h-14 md:h-16 flex items-center justify-between">
         <div className="flex items-center gap-2 md:gap-3">
-          <img 
-            src={crystalLogo} 
-            alt="CrystalBudget" 
-            className="w-8 h-8 md:w-10 md:h-10 object-contain mix-blend-screen dark:mix-blend-screen"
-            style={{ filter: 'brightness(1.1)' }}
-          />
+          <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-blue-900 to-cyan-900 flex items-center justify-center shadow-md overflow-hidden">
+            <img 
+              src={crystalLogo} 
+              alt="CrystalBudget" 
+              className="w-7 h-7 md:w-9 md:h-9 object-contain"
+            />
+          </div>
           <h1 className="text-lg md:text-xl font-bold gradient-text">CrystalBudget</h1>
         </div>
 
