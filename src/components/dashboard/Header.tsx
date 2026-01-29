@@ -26,7 +26,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 glass-card border-b border-border/50">
-      <div className="container mx-auto px-4 h-14 md:h-16 flex items-center justify-between">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 md:h-16 flex items-center justify-between">
         <div className="flex items-center gap-2 md:gap-3">
           <img 
             src={crystalLogo} 

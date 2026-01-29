@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useExpenseCategories, useIncomes, useDeleteExpenseCategory } from '@/hooks/useBudget';
 import { useAllAllocations } from '@/hooks/useAllocations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CategoryIcon } from '@/components/icons/CategoryIcon';
@@ -41,7 +40,7 @@ export function CategoryAllocation() {
   }, {} as Record<string, number>);
   const totalIncome = incomes.reduce((sum, inc) => sum + Number(inc.amount), 0);
 
-  // Calculate allocated amounts for each expense category
+  // Actual allocated (only from available income in linked categories) — for Нераспределено
   const getCategoryAllocation = (categoryId: string) => {
     const categoryAllocations = allAllocations.filter(a => a.expense_category_id === categoryId);
     let totalAllocated = 0;
@@ -50,10 +49,24 @@ export function CategoryAllocation() {
       if (allocation.allocation_type === 'percentage') {
         totalAllocated += sourceIncome * allocation.allocation_value / 100;
       } else {
-        totalAllocated += allocation.allocation_value;
+        totalAllocated += Math.min(allocation.allocation_value, sourceIncome);
       }
     }
     return totalAllocated;
+  };
+  // Planned total for category (from settings) — shown as "итоговая сумма" on the right
+  const getCategoryPlannedTotal = (categoryId: string) => {
+    const categoryAllocations = allAllocations.filter(a => a.expense_category_id === categoryId);
+    let total = 0;
+    for (const allocation of categoryAllocations) {
+      const sourceIncome = incomeByCategory[allocation.income_category_id] || 0;
+      if (allocation.allocation_type === 'percentage') {
+        total += sourceIncome * allocation.allocation_value / 100;
+      } else {
+        total += allocation.allocation_value;
+      }
+    }
+    return total;
   };
   const totalAllocated = expenseCategories.reduce((sum, cat) => {
     return sum + getCategoryAllocation(cat.id);
@@ -79,38 +92,33 @@ export function CategoryAllocation() {
     setCategoryToDelete(null);
   };
   const renderCategoryContent = (cat: ExpenseCategory) => {
-    const amount = getCategoryAllocation(cat.id);
-    const progressValue = totalIncome > 0 ? amount / totalIncome * 100 : 0;
     const categoryAllocations = allAllocations.filter(a => a.expense_category_id === cat.id);
-    return <div className="space-y-1 md:space-y-2 p-2 md:p-0">
-        <div className="flex items-center justify-between gap-1.5 md:gap-2">
-          <div className="flex items-center gap-1.5 md:gap-2 min-w-0 flex-1">
-            <div className="w-7 h-7 md:w-9 md:h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-secondary/50 overflow-visible">
-              <CategoryIcon icon={cat.icon} className="text-sm md:text-base" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <span className="font-medium text-xs md:text-base block truncate">{cat.name}</span>
-              {categoryAllocations.length > 0 && <p className="text-[8px] md:text-xs text-muted-foreground truncate">
-                  {categoryAllocations.map((a, i) => <span key={a.id}>
-                      {a.income_category?.name}: {a.allocation_type === 'percentage' ? `${a.allocation_value}%` : `${a.allocation_value.toLocaleString('ru-RU')}₽`}
-                      {i < categoryAllocations.length - 1 && ' • '}
-                    </span>)}
-                </p>}
-            </div>
+    const plannedTotal = getCategoryPlannedTotal(cat.id);
+    return (
+      <div className="p-2 md:p-0 flex items-start justify-between gap-3">
+        <div className="flex gap-2 min-w-0 flex-1">
+          <div className="w-7 h-7 md:w-9 md:h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-secondary/50 overflow-visible">
+            <CategoryIcon icon={cat.icon} className="text-sm md:text-base" />
           </div>
-          
-          <span className="text-[10px] md:text-sm font-medium whitespace-nowrap shrink-0">
-            {amount.toLocaleString('ru-RU')} ₽
-          </span>
+          <div className="min-w-0 flex-1">
+            <span className="font-medium text-xs md:text-base block truncate">{cat.name}</span>
+            {categoryAllocations.length > 0 && (
+              <p className="text-[8px] md:text-xs text-muted-foreground truncate mt-0.5">
+                {categoryAllocations.map((a, i) => (
+                  <span key={a.id}>
+                    {a.income_category?.name}: {a.allocation_type === 'percentage' ? `${a.allocation_value}%` : `${a.allocation_value.toLocaleString('ru-RU')}₽`}
+                    {i < categoryAllocations.length - 1 && ' • '}
+                  </span>
+                ))}
+              </p>
+            )}
+          </div>
         </div>
-        
-        <div className="flex items-center gap-1.5 md:gap-3">
-          <Progress value={progressValue} className="h-1 md:h-2 flex-1" animated />
-          <span className="text-[8px] md:text-xs text-muted-foreground w-6 md:w-12 text-right">
-            {Math.round(progressValue)}%
-          </span>
-        </div>
-      </div>;
+        <span className="text-sm md:text-base font-medium whitespace-nowrap shrink-0">
+          {plannedTotal.toLocaleString('ru-RU')} ₽
+        </span>
+      </div>
+    );
   };
   return <>
       <Card className="glass-card overflow-hidden">

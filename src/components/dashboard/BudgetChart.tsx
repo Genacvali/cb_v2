@@ -75,7 +75,8 @@ export function BudgetChart() {
       if (allocation.allocation_type === 'percentage') {
         totalAllocated += (sourceIncome * allocation.allocation_value) / 100;
       } else {
-        totalAllocated += allocation.allocation_value;
+        // Fixed amount: only count what the source category actually has
+        totalAllocated += Math.min(allocation.allocation_value, sourceIncome);
       }
     }
     return totalAllocated;

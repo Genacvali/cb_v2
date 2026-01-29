@@ -56,7 +56,7 @@ export function StatsCards() {
   ];
 
   return (
-    <div className="grid grid-cols-3 gap-1.5 md:gap-4 mb-3 md:mb-8">
+    <div className="grid grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-6 md:mb-8">
       {stats.map((stat, idx) => (
         <Card key={stat.title} className="glass-card hover-lift overflow-hidden">
           <CardContent className="p-2 md:p-6">

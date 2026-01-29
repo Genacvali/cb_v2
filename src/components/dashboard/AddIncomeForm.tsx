@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { QuickCategoryAdd } from './QuickCategoryAdd';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Plus, Loader2, Wallet, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
@@ -22,6 +23,7 @@ export function AddIncomeForm() {
   const { data: currencies = [] } = useCurrencies();
   const addIncome = useAddIncome();
   const resetIncomes = useResetIncomes();
+  const isMobile = useIsMobile();
 
   // Set default currency from profile
   useEffect(() => {
@@ -134,7 +136,7 @@ export function AddIncomeForm() {
           {/* Category selector - compact */}
           <Select value={categoryId} onValueChange={setCategoryId}>
             <SelectTrigger className="w-[80px] md:w-[120px] h-9 md:h-10 shrink-0 text-xs md:text-sm px-2">
-              <SelectValue placeholder="Кат.">
+              <SelectValue placeholder={isMobile ? 'Кат.' : 'Категории'}>
                 {selectedCategory && (
                   <span className="truncate">{selectedCategory.name}</span>
                 )}

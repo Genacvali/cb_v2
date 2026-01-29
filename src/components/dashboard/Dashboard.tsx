@@ -15,23 +15,23 @@ export function Dashboard() {
     <div className="min-h-screen bg-background overflow-x-hidden">
       <Header />
       
-      <main className="container mx-auto px-2 md:px-4 py-3 md:py-8 max-w-full">
+      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
         {/* Category manager - hidden on mobile (available in burger menu) */}
-        <div className="hidden md:flex justify-end mb-4">
+        <div className="hidden md:flex justify-end mb-4 md:mb-6">
           <CategoryManager />
         </div>
         
         <StatsCards />
         
-        <div className="grid lg:grid-cols-2 gap-3 md:gap-6">
-          <div className="space-y-3 md:space-y-6">
+        <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 items-start">
+          <div className="space-y-4 md:space-y-6 min-w-0">
             <div ref={incomeRef}>
               <AddIncomeForm />
             </div>
             <IncomeHistory />
           </div>
           
-          <div ref={allocationRef}>
+          <div ref={allocationRef} className="min-w-0">
             <CategoryAllocation />
           </div>
         </div>
