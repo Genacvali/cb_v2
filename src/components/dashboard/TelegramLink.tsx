@@ -95,7 +95,7 @@ export function TelegramLink() {
     },
   });
 
-  const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || 'CrystalBudgetBot';
+  const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || 'CrystalBudget_bot';
   const telegramBotUrl = profile?.telegram_link_code
     ? `https://t.me/${botUsername}?start=${profile.telegram_link_code}`
     : `https://t.me/${botUsername}`;

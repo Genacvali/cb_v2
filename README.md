@@ -29,13 +29,13 @@ npm run build
 
 **Вход через Telegram (кнопка «Войти через Telegram»):**
 
-1. В **@BotFather** создайте бота и запомните его **username** (без @), например `CrystalBudgetBot`.
+1. В **@BotFather** создайте бота и запомните его **username** (без @), например `CrystalBudget_bot`.
 2. Привяжите домен сайта: в @BotFather отправьте `/setdomain`, выберите бота, укажите домен (например `crystalbudget.net` без https://).
-3. В проекте задайте переменную окружения (в `.env`):
+3. В проекте задайте переменную окружения (в `.env`), если имя бота другое:
    ```env
-   VITE_TELEGRAM_BOT_USERNAME=CrystalBudgetBot
+   VITE_TELEGRAM_BOT_USERNAME=CrystalBudget_bot
    ```
-   Подставьте свой username бота. Если не задано, используется `CrystalBudgetBot`.
+   По умолчанию используется `CrystalBudget_bot`.
 4. Ошибка **«Username invalid»** обычно значит: неверное имя бота в `VITE_TELEGRAM_BOT_USERNAME` или домен не привязан в @BotFather (`/setdomain`).
 
 **Если бот не реагирует на сообщения** — установите вебхук (один раз):
