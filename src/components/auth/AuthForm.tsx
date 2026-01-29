@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Wallet, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import crystalLogo from '@/assets/crystal-logo.png';
 
 export function AuthForm() {
   const [email, setEmail] = useState('');
@@ -96,9 +97,11 @@ export function AuthForm() {
         
         <Card className="w-full max-w-md glass-card relative z-10">
           <CardHeader className="text-center space-y-4">
-            <div className="mx-auto w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center shadow-lg">
-              <Wallet className="w-8 h-8 text-white" />
-            </div>
+            <img 
+              src={crystalLogo} 
+              alt="CrystalBudget" 
+              className="mx-auto w-16 h-16 object-contain"
+            />
             <div>
               <CardTitle className="text-2xl font-bold">Сброс пароля</CardTitle>
               <CardDescription>Введите email для восстановления доступа</CardDescription>
@@ -157,9 +160,11 @@ export function AuthForm() {
       
       <Card className="w-full max-w-md glass-card relative z-10">
         <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center shadow-lg">
-            <Wallet className="w-8 h-8 text-white" />
-          </div>
+          <img 
+            src={crystalLogo} 
+            alt="CrystalBudget" 
+            className="mx-auto w-16 h-16 object-contain"
+          />
           <div>
             <CardTitle className="text-2xl font-bold">CrystalBudget</CardTitle>
             <CardDescription>Управляйте бюджетом с умом</CardDescription>
