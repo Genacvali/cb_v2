@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
-import { useIncomeCategories, useAddExpenseCategory, useUpdateExpenseCategory } from '@/hooks/useBudget';
+import { useState, useEffect, useMemo } from 'react';
+import { useIncomeCategories, useAddExpenseCategory, useUpdateExpenseCategory, useIncomes } from '@/hooks/useBudget';
 import { useExpenseCategoryAllocations, useBulkSaveAllocations } from '@/hooks/useAllocations';
+import { useCurrencies, getCurrencySymbol } from '@/hooks/useCurrencies';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,10 +34,26 @@ interface Props {
 
 export function ExpenseCategoryForm({ category, isEditing = false, onClose, onSuccess }: Props) {
   const { data: incomeCategories = [] } = useIncomeCategories();
+  const { data: incomes = [] } = useIncomes();
   const { data: existingAllocations = [] } = useExpenseCategoryAllocations(category?.id);
+  const { data: currencies = [] } = useCurrencies();
   const addCategory = useAddExpenseCategory();
   const updateCategory = useUpdateExpenseCategory();
   const bulkSaveAllocations = useBulkSaveAllocations();
+
+  // Build a map of income category -> currencies used in that category's incomes
+  const incomeCategoryCurrencies = useMemo(() => {
+    const map: Record<string, Set<string>> = {};
+    incomes.forEach(income => {
+      if (income.category_id) {
+        if (!map[income.category_id]) {
+          map[income.category_id] = new Set();
+        }
+        map[income.category_id].add(income.currency || 'RUB');
+      }
+    });
+    return map;
+  }, [incomes]);
 
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('🛒');
@@ -96,6 +113,16 @@ export function ExpenseCategoryForm({ category, isEditing = false, onClose, onSu
 
   const getIncomeCategoryName = (id: string) => {
     return incomeCategories.find(c => c.id === id)?.name || 'Не выбрано';
+  };
+
+  // Get the currency for a specific income category based on actual incomes
+  const getIncomeCategoryCurrency = (categoryId: string): string => {
+    const currencySet = incomeCategoryCurrencies[categoryId];
+    if (currencySet && currencySet.size > 0) {
+      // Return the first currency (most incomes use single currency)
+      return Array.from(currencySet)[0];
+    }
+    return 'RUB'; // Default
   };
 
   const handleSave = async () => {
@@ -300,7 +327,9 @@ export function ExpenseCategoryForm({ category, isEditing = false, onClose, onSu
                           className="bg-secondary/50 pr-8 h-9"
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                          {allocation.allocation_type === 'percentage' ? '%' : '₽'}
+                          {allocation.allocation_type === 'percentage' 
+                            ? '%' 
+                            : getCurrencySymbol(getIncomeCategoryCurrency(allocation.income_category_id), currencies)}
                         </span>
                       </div>
                     </div>

@@ -25,19 +25,13 @@ export function StatsCards() {
     .filter(c => c.allocation_type === 'percentage')
     .reduce((sum, c) => sum + c.allocation_value, 0);
 
-  // Format multi-currency display
+  // Format multi-currency display - show all currencies
   const incomeDisplay = useMemo(() => {
     const entries = Object.entries(incomesByCurrency);
     if (entries.length === 0) return '0 ₽';
-    if (entries.length === 1) {
-      const [currency, amount] = entries[0];
-      return formatMoney(amount, currency, currencies);
-    }
-    // Multiple currencies - show primary and count
+    // Show all currencies, sorted by amount descending
     const sorted = entries.sort((a, b) => b[1] - a[1]);
-    const [primary] = sorted[0];
-    const primaryAmount = incomesByCurrency[primary];
-    return `${formatMoney(primaryAmount, primary, currencies)} +${entries.length - 1}`;
+    return sorted.map(([currency, amount]) => formatMoney(amount, currency, currencies)).join(' / ');
   }, [incomesByCurrency, currencies]);
 
   const stats = [
