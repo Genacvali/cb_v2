@@ -161,6 +161,9 @@ export type Database = {
           email: string | null
           id: string
           onboarding_completed: boolean | null
+          telegram_id: number | null
+          telegram_link_code: string | null
+          telegram_linked_at: string | null
           tutorial_completed: boolean | null
           updated_at: string
           user_id: string
@@ -171,6 +174,9 @@ export type Database = {
           email?: string | null
           id?: string
           onboarding_completed?: boolean | null
+          telegram_id?: number | null
+          telegram_link_code?: string | null
+          telegram_linked_at?: string | null
           tutorial_completed?: boolean | null
           updated_at?: string
           user_id: string
@@ -181,6 +187,9 @@ export type Database = {
           email?: string | null
           id?: string
           onboarding_completed?: boolean | null
+          telegram_id?: number | null
+          telegram_link_code?: string | null
+          telegram_linked_at?: string | null
           tutorial_completed?: boolean | null
           updated_at?: string
           user_id?: string
