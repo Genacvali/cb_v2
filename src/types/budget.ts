@@ -4,6 +4,7 @@ export interface Profile {
   email: string | null;
   display_name: string | null;
   onboarding_completed: boolean;
+  tutorial_completed: boolean;
   created_at: string;
   updated_at: string;
 }

@@ -161,6 +161,7 @@ export type Database = {
           email: string | null
           id: string
           onboarding_completed: boolean | null
+          tutorial_completed: boolean | null
           updated_at: string
           user_id: string
         }
@@ -170,6 +171,7 @@ export type Database = {
           email?: string | null
           id?: string
           onboarding_completed?: boolean | null
+          tutorial_completed?: boolean | null
           updated_at?: string
           user_id: string
         }
@@ -179,6 +181,7 @@ export type Database = {
           email?: string | null
           id?: string
           onboarding_completed?: boolean | null
+          tutorial_completed?: boolean | null
           updated_at?: string
           user_id?: string
         }
