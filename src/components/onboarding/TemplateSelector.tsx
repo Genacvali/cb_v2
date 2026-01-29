@@ -31,13 +31,11 @@ export function TemplateSelector() {
       
       <div className="relative z-10 w-full max-w-4xl">
         <div className="text-center mb-8">
-          <div className="mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-900 to-cyan-900 flex items-center justify-center shadow-lg overflow-hidden mb-4">
-            <img 
-              src={crystalLogo} 
-              alt="CrystalBudget" 
-              className="w-18 h-18 object-contain"
-            />
-          </div>
+          <img 
+            src={crystalLogo} 
+            alt="CrystalBudget" 
+            className="mx-auto w-20 h-20 object-cover rounded-2xl shadow-lg mb-4"
+          />
           <h1 className="text-3xl font-bold mb-2">Добро пожаловать в CrystalBudget!</h1>
           <p className="text-muted-foreground">Выберите шаблон для быстрого старта</p>
         </div>
