@@ -95,6 +95,11 @@ export function TelegramLink() {
     },
   });
 
+  const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || 'CrystalBudgetBot';
+  const telegramBotUrl = profile?.telegram_link_code
+    ? `https://t.me/${botUsername}?start=${profile.telegram_link_code}`
+    : `https://t.me/${botUsername}`;
+
   const copyCode = () => {
     if (profile?.telegram_link_code) {
       navigator.clipboard.writeText(`/start ${profile.telegram_link_code}`);
@@ -102,7 +107,7 @@ export function TelegramLink() {
       setTimeout(() => setCopied(false), 2000);
       toast({
         title: 'Скопировано!',
-        description: 'Отправьте команду боту @CrystalBudgetBot',
+        description: `Отправьте команду боту @${botUsername}`,
       });
     }
   };
@@ -161,15 +166,24 @@ export function TelegramLink() {
         ) : hasCode ? (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Отправьте эту команду боту:
+              Нажмите кнопку ниже — откроется Telegram с ботом. Нажмите «START» в чате, и аккаунт привяжется автоматически.
             </p>
-            <div className="flex gap-2">
+            <Button
+              asChild
+              className="w-full gradient-primary"
+            >
+              <a href={telegramBotUrl} target="_blank" rel="noopener noreferrer">
+                <Bot className="w-4 h-4 mr-2" />
+                Открыть бота и привязать аккаунт
+              </a>
+            </Button>
+            <div className="flex gap-2 items-center">
               <Input 
                 value={`/start ${profile?.telegram_link_code}`} 
                 readOnly 
-                className="font-mono text-sm"
+                className="font-mono text-sm flex-1"
               />
-              <Button variant="outline" size="icon" onClick={copyCode}>
+              <Button variant="outline" size="icon" onClick={copyCode} title="Скопировать команду">
                 {copied ? (
                   <Check className="w-4 h-4 text-green-500" />
                 ) : (
@@ -180,10 +194,12 @@ export function TelegramLink() {
             <Button
               variant="link"
               size="sm"
-              className="px-0 h-auto"
-              onClick={() => window.open('https://t.me/CrystalBudgetBot', '_blank')}
+              className="px-0 h-auto text-muted-foreground"
+              asChild
             >
-              Открыть @CrystalBudgetBot →
+              <a href={telegramBotUrl} target="_blank" rel="noopener noreferrer">
+                Или открыть @{botUsername} →
+              </a>
             </Button>
           </div>
         ) : (
