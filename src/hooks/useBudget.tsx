@@ -242,6 +242,23 @@ export function useResetIncomes() {
   });
 }
 
+export function useUpdateIncome() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, amount, category_id, description }: { id: string; amount: number; category_id: string; description?: string | null }) => {
+      const { error } = await supabase
+        .from('incomes')
+        .update({ amount, category_id, description })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['incomes'] });
+    },
+  });
+}
+
 export function useApplyTemplate() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
