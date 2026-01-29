@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, User, Palette } from 'lucide-react';
+import { LogOut, User, Palette, Sun } from 'lucide-react';
 import crystalLogo from '@/assets/crystal-logo.png';
 
 export function Header() {
@@ -37,7 +37,7 @@ export function Header() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8 md:h-10 md:w-10">
-                <span className="text-lg">{currentTheme?.icon || '☀️'}</span>
+                {currentTheme ? <currentTheme.Icon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -52,7 +52,7 @@ export function Header() {
                   onClick={() => setTheme(option.value)}
                   className={theme === option.value ? 'bg-secondary' : ''}
                 >
-                  <span className="mr-2">{option.icon}</span>
+                  <option.Icon className="w-4 h-4 mr-2" />
                   {option.label}
                 </DropdownMenuItem>
               ))}
