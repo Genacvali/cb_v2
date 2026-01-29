@@ -1,5 +1,19 @@
 # Telegram-бот CrystalBudget: почему не реагирует и как починить
 
+## Ошибка «telegram_link_code column not found»
+
+Если в приложении появляется ошибка вида **Could not find the 'telegram_link_code' column of 'profiles' in the schema cache**, в базе Supabase ещё нет колонок для Telegram.
+
+**Что сделать:**
+
+1. Откройте **Supabase Dashboard** → ваш проект → **SQL Editor**.
+2. Выполните скрипт из файла `supabase/scripts/add-telegram-profile-columns.sql` (или команду ниже).
+3. Обновите страницу приложения.
+
+Либо примените все миграции из репозитория: в корне проекта выполните `supabase db push` (нужен установленный Supabase CLI и привязка к проекту).
+
+---
+
 ## Почему бот не реагирует
 
 Telegram отправляет обновления (сообщения) боту только на **вебхук** — URL, который вы один раз сообщаете Telegram. Если вебхук не установлен, Telegram никуда не шлёт сообщения, и бот «молчит».
