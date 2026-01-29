@@ -12,10 +12,10 @@ export function Dashboard() {
   const allocationRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <Header />
       
-      <main className="container mx-auto px-3 md:px-4 py-4 md:py-8">
+      <main className="container mx-auto px-2 md:px-4 py-3 md:py-8 max-w-full">
         {/* Category manager - hidden on mobile (available in burger menu) */}
         <div className="hidden md:flex justify-end mb-4">
           <CategoryManager />
@@ -23,13 +23,13 @@ export function Dashboard() {
         
         <StatsCards />
         
-        <div className="grid lg:grid-cols-2 gap-4 md:gap-6">
-        <div className="space-y-4 md:space-y-6">
-          <div ref={incomeRef}>
-            <AddIncomeForm />
+        <div className="grid lg:grid-cols-2 gap-3 md:gap-6">
+          <div className="space-y-3 md:space-y-6">
+            <div ref={incomeRef}>
+              <AddIncomeForm />
+            </div>
+            <IncomeHistory />
           </div>
-          <IncomeHistory />
-        </div>
           
           <div ref={allocationRef}>
             <CategoryAllocation />
