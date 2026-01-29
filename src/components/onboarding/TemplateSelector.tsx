@@ -30,7 +30,7 @@ export function TemplateSelector() {
       
       <div className="relative z-10 w-full max-w-4xl">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">Добро пожаловать в BudgetFlow!</h1>
+          <h1 className="text-3xl font-bold mb-2">Добро пожаловать в CrystalBudget!</h1>
           <p className="text-muted-foreground">Выберите шаблон для быстрого старта</p>
         </div>
         
