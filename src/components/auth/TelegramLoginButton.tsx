@@ -68,9 +68,13 @@ export function TelegramLoginButton({ botName, onSuccess }: TelegramLoginButtonP
         }
       } catch (error) {
         console.error('Telegram auth error:', error);
+        const msg = error instanceof Error ? error.message : 'Не удалось войти через Telegram';
+        const isInvalidUsername = /username invalid|Username invalid/i.test(msg);
         toast({
-          title: 'Ошибка входа',
-          description: error instanceof Error ? error.message : 'Не удалось войти через Telegram',
+          title: 'Ошибка входа через Telegram',
+          description: isInvalidUsername
+            ? 'Укажите правильное имя бота в VITE_TELEGRAM_BOT_USERNAME (без @) и привяжите домен в @BotFather командой /setdomain.'
+            : msg,
           variant: 'destructive',
         });
       } finally {

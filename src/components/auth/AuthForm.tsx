@@ -235,7 +235,7 @@ export function AuthForm() {
                   </div>
                 </div>
                 
-                <TelegramLoginButton botName="CrystalBudgetBot" />
+                <TelegramLoginButton botName={import.meta.env.VITE_TELEGRAM_BOT_USERNAME || 'CrystalBudgetBot'} />
               </form>
             </TabsContent>
             
@@ -288,7 +288,7 @@ export function AuthForm() {
                   </div>
                 </div>
                 
-                <TelegramLoginButton botName="CrystalBudgetBot" />
+                <TelegramLoginButton botName={import.meta.env.VITE_TELEGRAM_BOT_USERNAME || 'CrystalBudgetBot'} />
               </form>
             </TabsContent>
           </Tabs>
