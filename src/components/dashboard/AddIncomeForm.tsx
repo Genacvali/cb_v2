@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { useIncomeCategories, useAddIncome } from '@/hooks/useBudget';
+import { useIncomeCategories, useAddIncome, useResetIncomes, useIncomes } from '@/hooks/useBudget';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CategoryIcon } from '@/components/icons/CategoryIcon';
 import { QuickCategoryAdd } from './QuickCategoryAdd';
-import { Plus, Loader2, Wallet } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Plus, Loader2, Wallet, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function AddIncomeForm() {
@@ -15,7 +16,18 @@ export function AddIncomeForm() {
   const [isStartingBalance, setIsStartingBalance] = useState(false);
   
   const { data: incomeCategories = [] } = useIncomeCategories();
+  const { data: incomes = [] } = useIncomes();
   const addIncome = useAddIncome();
+  const resetIncomes = useResetIncomes();
+
+  const handleReset = async () => {
+    try {
+      await resetIncomes.mutateAsync();
+      toast.success('Доходы обнулены. Введите новую сумму для распределения.');
+    } catch {
+      toast.error('Ошибка при обнулении');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,6 +90,35 @@ export function AddIncomeForm() {
             </span>
           </button>
           <QuickCategoryAdd type="income" />
+          
+          {incomes.length > 0 && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button
+                  type="button"
+                  className="text-xs px-2 py-1 rounded-full transition-colors flex items-center gap-1 bg-destructive/10 text-destructive hover:bg-destructive/20"
+                  title="Обнулить все доходы для нового распределения"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span className="hidden sm:inline">Сброс</span>
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Начать новый период?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Все текущие доходы будут обнулены. Вы сможете ввести новую сумму для нового распределения по категориям.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Отмена</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleReset}>
+                    Обнулить
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </div>
       </CardHeader>
       <CardContent className="p-4 pt-2">

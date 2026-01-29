@@ -223,6 +223,25 @@ export function useAddIncome() {
   });
 }
 
+export function useResetIncomes() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  
+  return useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error('Not authenticated');
+      const { error } = await supabase
+        .from('incomes')
+        .delete()
+        .eq('user_id', user.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['incomes'] });
+    },
+  });
+}
+
 export function useApplyTemplate() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
