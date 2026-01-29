@@ -1,4 +1,5 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import { Sun, Moon, Star, Heart, Circle, LucideIcon } from 'lucide-react';
 
 export type Theme = 'light' | 'dark' | 'night' | 'pink' | 'ebony';
 
@@ -59,10 +60,10 @@ export function useTheme() {
   return context;
 }
 
-export const THEME_OPTIONS: { value: Theme; label: string; icon: string }[] = [
-  { value: 'light', label: 'Светлая', icon: '☀️' },
-  { value: 'dark', label: 'Тёмная', icon: '🌙' },
-  { value: 'night', label: 'Ночная', icon: '🌃' },
-  { value: 'pink', label: 'Розовая', icon: '🌸' },
-  { value: 'ebony', label: 'Эбони', icon: '🖤' },
+export const THEME_OPTIONS: { value: Theme; label: string; Icon: LucideIcon }[] = [
+  { value: 'light', label: 'Светлая', Icon: Sun },
+  { value: 'dark', label: 'Тёмная', Icon: Moon },
+  { value: 'night', label: 'Ночная', Icon: Star },
+  { value: 'pink', label: 'Розовая', Icon: Heart },
+  { value: 'ebony', label: 'Эбони', Icon: Circle },
 ];
