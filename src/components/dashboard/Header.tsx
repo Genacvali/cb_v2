@@ -27,7 +27,8 @@ export function Header() {
           <img 
             src={crystalLogo} 
             alt="CrystalBudget" 
-            className="w-8 h-8 md:w-10 md:h-10 object-contain"
+            className="w-8 h-8 md:w-10 md:h-10 object-contain mix-blend-screen dark:mix-blend-screen"
+            style={{ filter: 'brightness(1.1)' }}
           />
           <h1 className="text-lg md:text-xl font-bold gradient-text">CrystalBudget</h1>
         </div>

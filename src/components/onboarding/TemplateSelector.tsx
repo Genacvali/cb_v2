@@ -34,7 +34,8 @@ export function TemplateSelector() {
           <img 
             src={crystalLogo} 
             alt="CrystalBudget" 
-            className="mx-auto w-20 h-20 object-contain mb-4"
+            className="mx-auto w-20 h-20 object-contain mb-4 mix-blend-screen"
+            style={{ filter: 'brightness(1.1)' }}
           />
           <h1 className="text-3xl font-bold mb-2">Добро пожаловать в CrystalBudget!</h1>
           <p className="text-muted-foreground">Выберите шаблон для быстрого старта</p>
