@@ -5,6 +5,7 @@ import { BudgetChart } from './BudgetChart';
 import { AddIncomeForm } from './AddIncomeForm';
 import { CategoryAllocation } from './CategoryAllocation';
 import { CategoryManager } from './CategoryManager';
+import { IncomeHistory } from './IncomeHistory';
 
 export function Dashboard() {
   const incomeRef = useRef<HTMLDivElement>(null);
@@ -27,6 +28,7 @@ export function Dashboard() {
           <div ref={incomeRef}>
             <AddIncomeForm />
           </div>
+          <IncomeHistory />
         </div>
           
           <div ref={allocationRef}>
