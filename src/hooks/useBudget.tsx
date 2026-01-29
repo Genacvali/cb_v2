@@ -246,10 +246,14 @@ export function useUpdateIncome() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async ({ id, amount, category_id, description }: { id: string; amount: number; category_id: string; description?: string | null }) => {
+    mutationFn: async ({ id, amount, category_id, description, currency }: { id: string; amount: number; category_id: string; description?: string | null; currency?: string }) => {
+      const updates: Record<string, unknown> = { amount, category_id, description };
+      if (currency) {
+        updates.currency = currency;
+      }
       const { error } = await supabase
         .from('incomes')
-        .update({ amount, category_id, description })
+        .update(updates)
         .eq('id', id);
       if (error) throw error;
     },
