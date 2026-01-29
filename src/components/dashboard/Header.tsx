@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme, THEME_OPTIONS } from '@/hooks/useTheme';
 import { Button } from '@/components/ui/button';
@@ -10,12 +11,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, User, Palette, Sun } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { LogOut, User, Palette, Sun, Bot } from 'lucide-react';
 import crystalLogo from '@/assets/crystal-logo.png';
+import { TelegramLink } from './TelegramLink';
 
 export function Header() {
   const { user, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
+  const [showTelegramDialog, setShowTelegramDialog] = useState(false);
 
   const initials = user?.email?.substring(0, 2).toUpperCase() || 'U';
   const currentTheme = THEME_OPTIONS.find(t => t.value === theme);
@@ -75,6 +79,15 @@ export function Header() {
                 <User className="w-4 h-4" />
                 <span className="truncate">{user?.email}</span>
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                className="flex items-center gap-2"
+                onClick={() => setShowTelegramDialog(true)}
+              >
+                <Bot className="w-4 h-4" />
+                Telegram бот
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem 
                 className="flex items-center gap-2 text-destructive focus:text-destructive"
                 onClick={() => signOut()}
@@ -86,6 +99,19 @@ export function Header() {
           </DropdownMenu>
         </div>
       </div>
+
+      {/* Telegram Link Dialog */}
+      <Dialog open={showTelegramDialog} onOpenChange={setShowTelegramDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Bot className="w-5 h-5" />
+              Telegram интеграция
+            </DialogTitle>
+          </DialogHeader>
+          <TelegramLink />
+        </DialogContent>
+      </Dialog>
     </header>
   );
 }
