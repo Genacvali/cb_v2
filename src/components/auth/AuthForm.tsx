@@ -100,7 +100,8 @@ export function AuthForm() {
             <img 
               src={crystalLogo} 
               alt="CrystalBudget" 
-              className="mx-auto w-16 h-16 object-contain"
+              className="mx-auto w-16 h-16 object-contain mix-blend-screen"
+              style={{ filter: 'brightness(1.1)' }}
             />
             <div>
               <CardTitle className="text-2xl font-bold">Сброс пароля</CardTitle>
@@ -163,7 +164,8 @@ export function AuthForm() {
           <img 
             src={crystalLogo} 
             alt="CrystalBudget" 
-            className="mx-auto w-16 h-16 object-contain"
+            className="mx-auto w-16 h-16 object-contain mix-blend-screen"
+            style={{ filter: 'brightness(1.1)' }}
           />
           <div>
             <CardTitle className="text-2xl font-bold">CrystalBudget</CardTitle>
