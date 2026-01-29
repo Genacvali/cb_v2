@@ -63,7 +63,7 @@ export function AuthForm() {
             <Wallet className="w-8 h-8 text-white" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold">BudgetFlow</CardTitle>
+            <CardTitle className="text-2xl font-bold">CrystalBudget</CardTitle>
             <CardDescription>Управляйте бюджетом с умом</CardDescription>
           </div>
         </CardHeader>
