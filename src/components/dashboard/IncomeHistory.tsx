@@ -171,35 +171,35 @@ export function IncomeHistory() {
 
   return (
     <>
-      <Card className="glass-card">
-        <CardHeader className="p-4 pb-2">
-          <div className="flex items-center justify-between gap-2">
+      <Card className="glass-card overflow-hidden">
+        <CardHeader className="p-3 md:p-4 pb-2">
+          <div className="flex items-center justify-between gap-1 md:gap-2">
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+              className="flex items-center gap-1.5 md:gap-2 hover:opacity-80 transition-opacity min-w-0"
             >
-              <History className="w-4 h-4 text-muted-foreground" />
-              <CardTitle className="text-base">История доходов</CardTitle>
+              <History className="w-4 h-4 text-muted-foreground shrink-0" />
+              <CardTitle className="text-sm md:text-base truncate">История</CardTitle>
               {isExpanded ? (
-                <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" />
               ) : (
-                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
               )}
             </button>
             
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="text-xs">
-                {filteredIncomes.length} записей
+            <div className="flex items-center gap-1 md:gap-2 shrink-0">
+              <Badge variant="secondary" className="text-[10px] md:text-xs px-1.5 md:px-2">
+                {filteredIncomes.length}
               </Badge>
               <Select value={periodFilter} onValueChange={(v) => setPeriodFilter(v as PeriodFilter)}>
-                <SelectTrigger className="h-8 w-[140px] text-xs">
+                <SelectTrigger className="h-7 md:h-8 w-[100px] md:w-[140px] text-[10px] md:text-xs px-2">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="current">Текущий месяц</SelectItem>
-                  <SelectItem value="last">Прошлый месяц</SelectItem>
+                  <SelectItem value="current">Этот месяц</SelectItem>
+                  <SelectItem value="last">Прошлый</SelectItem>
                   <SelectItem value="last3">3 месяца</SelectItem>
-                  <SelectItem value="all">Все время</SelectItem>
+                  <SelectItem value="all">Все</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -207,11 +207,11 @@ export function IncomeHistory() {
         </CardHeader>
         
         {isExpanded && (
-          <CardContent className="p-4 pt-2 space-y-3">
+          <CardContent className="p-3 md:p-4 pt-2 space-y-2 md:space-y-3">
             {/* Period summary */}
-            <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
-              <span className="text-sm text-muted-foreground">{periodLabels[periodFilter]}</span>
-              <span className="font-semibold text-sm">{formatTotals(totalsByCurrency)}</span>
+            <div className="flex items-center justify-between p-2 md:p-3 rounded-lg bg-secondary/30">
+              <span className="text-xs md:text-sm text-muted-foreground">{periodLabels[periodFilter]}</span>
+              <span className="font-semibold text-xs md:text-sm">{formatTotals(totalsByCurrency)}</span>
             </div>
 
             {groupedByDate.length === 0 ? (
@@ -236,36 +236,36 @@ export function IncomeHistory() {
                       {group.items.map(income => (
                         <div 
                           key={income.id} 
-                          className="flex items-center justify-between p-2.5 rounded-lg bg-secondary/20 hover:bg-secondary/30 transition-colors group"
+                          className="flex items-center justify-between p-2 md:p-2.5 rounded-lg bg-secondary/20 hover:bg-secondary/30 transition-colors group gap-2"
                         >
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium truncate">
+                            <div className="flex items-center gap-1.5 md:gap-2">
+                              <span className="text-xs md:text-sm font-medium truncate">
                                 {getCategoryName(income.category_id)}
                               </span>
                               {income.description && (
-                                <Badge variant="outline" className="text-[10px] shrink-0">
+                                <Badge variant="outline" className="text-[8px] md:text-[10px] px-1 shrink-0 hidden sm:inline-flex">
                                   {income.description}
                                 </Badge>
                               )}
                             </div>
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-[10px] md:text-xs text-muted-foreground">
                               {format(new Date(income.created_at), 'HH:mm')}
                             </span>
                           </div>
                           
-                          <div className="flex items-center gap-1">
-                            <span className="text-sm font-semibold text-primary mr-1">
+                          <div className="flex items-center gap-0.5 md:gap-1 shrink-0">
+                            <span className="text-xs md:text-sm font-semibold text-primary">
                               +{formatMoney(Number(income.amount), income.currency || 'RUB', currencies)}
                             </span>
                             
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+                              className="h-6 w-6 md:h-7 md:w-7 opacity-0 group-hover:opacity-100 md:transition-opacity text-muted-foreground hover:text-foreground"
                               onClick={() => handleEditClick(income)}
                             >
-                              <Pencil className="w-3.5 h-3.5" />
+                              <Pencil className="w-3 h-3" />
                             </Button>
                             
                             <AlertDialog>
@@ -273,9 +273,9 @@ export function IncomeHistory() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  className="h-6 w-6 md:h-7 md:w-7 opacity-0 group-hover:opacity-100 md:transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
                                 >
-                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <Trash2 className="w-3 h-3" />
                                 </Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent>

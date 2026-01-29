@@ -82,15 +82,15 @@ export function CategoryAllocation() {
     const amount = getCategoryAllocation(cat.id);
     const progressValue = totalIncome > 0 ? amount / totalIncome * 100 : 0;
     const categoryAllocations = allAllocations.filter(a => a.expense_category_id === cat.id);
-    return <div className="space-y-1.5 md:space-y-2 p-3 md:p-0">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            <div className="w-8 h-8 md:w-9 md:h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-secondary/50 overflow-visible">
-              <CategoryIcon icon={cat.icon} />
+    return <div className="space-y-1 md:space-y-2 p-2 md:p-0">
+        <div className="flex items-center justify-between gap-1.5 md:gap-2">
+          <div className="flex items-center gap-1.5 md:gap-2 min-w-0 flex-1">
+            <div className="w-7 h-7 md:w-9 md:h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-secondary/50 overflow-visible">
+              <CategoryIcon icon={cat.icon} className="text-sm md:text-base" />
             </div>
             <div className="min-w-0 flex-1">
-              <span className="font-medium text-sm md:text-base block truncate">{cat.name}</span>
-              {categoryAllocations.length > 0 && <p className="text-[10px] md:text-xs text-muted-foreground truncate">
+              <span className="font-medium text-xs md:text-base block truncate">{cat.name}</span>
+              {categoryAllocations.length > 0 && <p className="text-[8px] md:text-xs text-muted-foreground truncate">
                   {categoryAllocations.map((a, i) => <span key={a.id}>
                       {a.income_category?.name}: {a.allocation_type === 'percentage' ? `${a.allocation_value}%` : `${a.allocation_value.toLocaleString('ru-RU')}₽`}
                       {i < categoryAllocations.length - 1 && ' • '}
@@ -99,33 +99,32 @@ export function CategoryAllocation() {
             </div>
           </div>
           
-          <span className="text-xs md:text-sm font-medium whitespace-nowrap">
+          <span className="text-[10px] md:text-sm font-medium whitespace-nowrap shrink-0">
             {amount.toLocaleString('ru-RU')} ₽
           </span>
         </div>
         
-        <div className="flex items-center gap-2 md:gap-3">
-          <Progress value={progressValue} className="h-1.5 md:h-2 flex-1" animated />
-          <span className="text-[10px] md:text-xs text-muted-foreground w-8 md:w-12 text-right">
+        <div className="flex items-center gap-1.5 md:gap-3">
+          <Progress value={progressValue} className="h-1 md:h-2 flex-1" animated />
+          <span className="text-[8px] md:text-xs text-muted-foreground w-6 md:w-12 text-right">
             {Math.round(progressValue)}%
           </span>
         </div>
       </div>;
   };
   return <>
-      <Card className="glass-card">
-        <CardHeader className="flex flex-row items-center justify-between gap-2 p-3 md:p-6">
-          <div className="flex items-center gap-2">
-            <CardTitle className="text-base md:text-lg">Категории расходов</CardTitle>
-            <Badge variant={allocationPercent >= 100 ? 'default' : 'secondary'} className="text-xs">
+      <Card className="glass-card overflow-hidden">
+        <CardHeader className="flex flex-row items-center justify-between gap-1 md:gap-2 p-3 md:p-6">
+          <div className="flex items-center gap-1.5 md:gap-2 min-w-0">
+            <CardTitle className="text-sm md:text-lg truncate">Категории расходов</CardTitle>
+            <Badge variant={allocationPercent >= 100 ? 'default' : 'secondary'} className="text-[10px] md:text-xs px-1.5 shrink-0">
               {allocationPercent}%
             </Badge>
           </div>
           <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-1 h-8 text-muted-foreground hover:text-foreground">
+              <Button variant="ghost" size="sm" className="gap-0.5 md:gap-1 h-7 md:h-8 px-2 text-muted-foreground hover:text-foreground">
                 <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">Добавить</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-4 md:p-6">
@@ -139,20 +138,20 @@ export function CategoryAllocation() {
             </DialogContent>
           </Dialog>
         </CardHeader>
-        <CardContent className="space-y-3 md:space-y-4 p-4 md:p-6 pt-0 md:pt-0">
+        <CardContent className="space-y-2 md:space-y-4 p-3 md:p-6 pt-0 md:pt-0">
           {isMobile && expenseCategories.length > 0}
           
-          {expenseCategories.length === 0 ? <div className="text-center py-6">
-              <p className="text-muted-foreground text-sm mb-2">Нет категорий расходов</p>
-              <p className="text-xs text-muted-foreground">Нажмите «Добавить» чтобы создать</p>
+          {expenseCategories.length === 0 ? <div className="text-center py-4 md:py-6">
+              <p className="text-muted-foreground text-xs md:text-sm mb-1 md:mb-2">Нет категорий расходов</p>
+              <p className="text-[10px] md:text-xs text-muted-foreground">Нажмите «+» чтобы создать</p>
             </div> : expenseCategories.map(cat => isMobile ? <SwipeableCategory key={cat.id} onEdit={() => handleEdit(cat)} onDelete={() => handleDeleteClick(cat)}>
                   {renderCategoryContent(cat)}
                 </SwipeableCategory> : <div key={cat.id}>
                   {renderCategoryContent(cat)}
                 </div>)}
 
-          {totalIncome > 0 && <div className="pt-3 md:pt-4 mt-3 md:mt-4 border-t border-border">
-              <div className="flex items-center justify-between text-xs md:text-sm">
+          {totalIncome > 0 && <div className="pt-2 md:pt-4 mt-2 md:mt-4 border-t border-border">
+              <div className="flex items-center justify-between text-[10px] md:text-sm">
                 <span className="text-muted-foreground">Нераспределено</span>
                 <span className="font-medium">
                   {(totalIncome - totalAllocated).toLocaleString('ru-RU')} ₽

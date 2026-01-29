@@ -75,17 +75,18 @@ export function AddIncomeForm() {
   const currencySymbol = getCurrencySymbol(currency, currencies);
 
   return (
-    <Card className="glass-card">
-      <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
-        <CardTitle className="text-base flex items-center gap-2">
+    <Card className="glass-card overflow-hidden">
+      <CardHeader className="p-3 md:p-4 pb-2 flex flex-row items-center justify-between gap-2">
+        <CardTitle className="text-sm md:text-base flex items-center gap-1.5 shrink-0">
           <Plus className="w-4 h-4" />
-          Добавить доход
+          <span className="hidden xs:inline">Добавить доход</span>
+          <span className="xs:hidden">Доход</span>
         </CardTitle>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 md:gap-2 flex-wrap justify-end">
           <button
             type="button"
             onClick={() => setIsStartingBalance(!isStartingBalance)}
-            className={`text-xs px-2 py-1 rounded-full transition-colors flex items-center gap-1 ${
+            className={`text-[10px] md:text-xs px-1.5 md:px-2 py-1 rounded-full transition-colors flex items-center gap-0.5 md:gap-1 ${
               isStartingBalance 
                 ? 'bg-primary text-primary-foreground' 
                 : 'bg-secondary text-muted-foreground hover:text-foreground'
@@ -93,11 +94,8 @@ export function AddIncomeForm() {
             title="Записать как начальный остаток на счёте"
           >
             <Wallet className="w-3 h-3" />
-            <span className="hidden sm:inline">
-              {isStartingBalance ? 'Начальный остаток ✓' : 'Начальный остаток'}
-            </span>
-            <span className="sm:hidden">
-              {isStartingBalance ? `${currencySymbol} Остаток ✓` : `${currencySymbol} Остаток`}
+            <span className="hidden md:inline">
+              {isStartingBalance ? 'Остаток ✓' : 'Остаток'}
             </span>
           </button>
           <QuickCategoryAdd type="income" />
@@ -107,11 +105,10 @@ export function AddIncomeForm() {
               <AlertDialogTrigger asChild>
                 <button
                   type="button"
-                  className="text-xs px-2 py-1 rounded-full transition-colors flex items-center gap-1 bg-destructive/10 text-destructive hover:bg-destructive/20"
+                  className="text-[10px] md:text-xs p-1 md:px-2 md:py-1 rounded-full transition-colors flex items-center gap-0.5 md:gap-1 bg-destructive/10 text-destructive hover:bg-destructive/20"
                   title="Обнулить все доходы для нового распределения"
                 >
                   <RotateCcw className="w-3 h-3" />
-                  <span className="hidden sm:inline">Сброс</span>
                 </button>
               </AlertDialogTrigger>
               <AlertDialogContent>
@@ -132,12 +129,12 @@ export function AddIncomeForm() {
           )}
         </div>
       </CardHeader>
-      <CardContent className="p-4 pt-2">
-        <form onSubmit={handleSubmit} className="flex gap-2 items-center">
+      <CardContent className="p-3 md:p-4 pt-2">
+        <form onSubmit={handleSubmit} className="flex gap-1.5 md:gap-2 items-center">
           {/* Category selector - compact */}
           <Select value={categoryId} onValueChange={setCategoryId}>
-            <SelectTrigger className="w-[120px] h-10 shrink-0">
-              <SelectValue placeholder="Категория">
+            <SelectTrigger className="w-[80px] md:w-[120px] h-9 md:h-10 shrink-0 text-xs md:text-sm px-2">
+              <SelectValue placeholder="Кат.">
                 {selectedCategory && (
                   <span className="truncate">{selectedCategory.name}</span>
                 )}
@@ -146,7 +143,7 @@ export function AddIncomeForm() {
             <SelectContent>
               {incomeCategories.length === 0 ? (
                 <div className="py-3 px-2 text-center text-sm text-muted-foreground">
-                  Нажмите «Добавить» ↗
+                  Нажмите «+» ↗
                 </div>
               ) : (
                 incomeCategories.map((cat) => (
@@ -160,7 +157,7 @@ export function AddIncomeForm() {
 
           {/* Currency selector */}
           <Select value={currency} onValueChange={setCurrency}>
-            <SelectTrigger className="w-[70px] h-10 shrink-0">
+            <SelectTrigger className="w-[52px] md:w-[70px] h-9 md:h-10 shrink-0 text-xs md:text-sm px-2">
               <SelectValue>
                 {getCurrencySymbol(currency, currencies)}
               </SelectValue>
@@ -178,7 +175,7 @@ export function AddIncomeForm() {
           </Select>
 
           {/* Amount input */}
-          <div className="relative flex-1">
+          <div className="relative flex-1 min-w-0">
             <Input
               type="number"
               placeholder="0"
@@ -187,9 +184,9 @@ export function AddIncomeForm() {
               onKeyDown={handleKeyDown}
               min="0"
               step="0.01"
-              className="h-10 pr-10"
+              className="h-9 md:h-10 pr-8 text-sm"
             />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs md:text-sm">
               {currencySymbol}
             </span>
           </div>
@@ -198,7 +195,7 @@ export function AddIncomeForm() {
           <Button 
             type="submit" 
             size="icon"
-            className="h-10 w-10 shrink-0 gradient-primary"
+            className="h-9 w-9 md:h-10 md:w-10 shrink-0 gradient-primary"
             disabled={addIncome.isPending || !amount || !categoryId}
           >
             {addIncome.isPending ? (
