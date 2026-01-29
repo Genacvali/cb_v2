@@ -14,12 +14,34 @@ export type Database = {
   }
   public: {
     Tables: {
+      currencies: {
+        Row: {
+          code: string
+          is_default: boolean | null
+          name: string
+          symbol: string
+        }
+        Insert: {
+          code: string
+          is_default?: boolean | null
+          name: string
+          symbol: string
+        }
+        Update: {
+          code?: string
+          is_default?: boolean | null
+          name?: string
+          symbol?: string
+        }
+        Relationships: []
+      }
       expense_categories: {
         Row: {
           allocation_type: string
           allocation_value: number
           color: string | null
           created_at: string
+          currency: string
           icon: string | null
           id: string
           name: string
@@ -30,6 +52,7 @@ export type Database = {
           allocation_value?: number
           color?: string | null
           created_at?: string
+          currency?: string
           icon?: string | null
           id?: string
           name: string
@@ -40,6 +63,7 @@ export type Database = {
           allocation_value?: number
           color?: string | null
           created_at?: string
+          currency?: string
           icon?: string | null
           id?: string
           name?: string
@@ -124,6 +148,7 @@ export type Database = {
           amount: number
           category_id: string | null
           created_at: string
+          currency: string
           description: string | null
           id: string
           user_id: string
@@ -132,6 +157,7 @@ export type Database = {
           amount: number
           category_id?: string | null
           created_at?: string
+          currency?: string
           description?: string | null
           id?: string
           user_id: string
@@ -140,6 +166,7 @@ export type Database = {
           amount?: number
           category_id?: string | null
           created_at?: string
+          currency?: string
           description?: string | null
           id?: string
           user_id?: string
@@ -157,6 +184,7 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          default_currency: string | null
           display_name: string | null
           email: string | null
           id: string
@@ -170,6 +198,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          default_currency?: string | null
           display_name?: string | null
           email?: string | null
           id?: string
@@ -183,6 +212,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          default_currency?: string | null
           display_name?: string | null
           email?: string | null
           id?: string

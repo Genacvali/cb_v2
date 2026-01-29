@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { useIncomeCategories, useAddIncome, useResetIncomes, useIncomes } from '@/hooks/useBudget';
+import { useState, useEffect } from 'react';
+import { useIncomeCategories, useAddIncome, useResetIncomes, useIncomes, useProfile } from '@/hooks/useBudget';
+import { useCurrencies, getCurrencySymbol } from '@/hooks/useCurrencies';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CategoryIcon } from '@/components/icons/CategoryIcon';
 import { QuickCategoryAdd } from './QuickCategoryAdd';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Plus, Loader2, Wallet, RotateCcw } from 'lucide-react';
@@ -13,12 +13,22 @@ import { toast } from 'sonner';
 export function AddIncomeForm() {
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
+  const [currency, setCurrency] = useState('RUB');
   const [isStartingBalance, setIsStartingBalance] = useState(false);
   
   const { data: incomeCategories = [] } = useIncomeCategories();
   const { data: incomes = [] } = useIncomes();
+  const { data: profile } = useProfile();
+  const { data: currencies = [] } = useCurrencies();
   const addIncome = useAddIncome();
   const resetIncomes = useResetIncomes();
+
+  // Set default currency from profile
+  useEffect(() => {
+    if (profile?.default_currency) {
+      setCurrency(profile.default_currency);
+    }
+  }, [profile?.default_currency]);
 
   const handleReset = async () => {
     try {
@@ -41,11 +51,11 @@ export function AddIncomeForm() {
       await addIncome.mutateAsync({
         amount: parseFloat(amount),
         category_id: categoryId,
+        currency,
         description: isStartingBalance ? 'Начальный баланс' : null,
       });
       
       setAmount('');
-      // Keep category selected for quick repeated entries
       setIsStartingBalance(false);
       
       toast.success(isStartingBalance ? 'Баланс сохранён' : 'Доход добавлен');
@@ -62,6 +72,7 @@ export function AddIncomeForm() {
   };
 
   const selectedCategory = incomeCategories.find(c => c.id === categoryId);
+  const currencySymbol = getCurrencySymbol(currency, currencies);
 
   return (
     <Card className="glass-card">
@@ -86,7 +97,7 @@ export function AddIncomeForm() {
               {isStartingBalance ? 'Начальный остаток ✓' : 'Начальный остаток'}
             </span>
             <span className="sm:hidden">
-              {isStartingBalance ? '₽ Остаток ✓' : '₽ Остаток'}
+              {isStartingBalance ? `${currencySymbol} Остаток ✓` : `${currencySymbol} Остаток`}
             </span>
           </button>
           <QuickCategoryAdd type="income" />
@@ -125,7 +136,7 @@ export function AddIncomeForm() {
         <form onSubmit={handleSubmit} className="flex gap-2 items-center">
           {/* Category selector - compact */}
           <Select value={categoryId} onValueChange={setCategoryId}>
-            <SelectTrigger className="w-[140px] h-10 shrink-0">
+            <SelectTrigger className="w-[120px] h-10 shrink-0">
               <SelectValue placeholder="Категория">
                 {selectedCategory && (
                   <span className="truncate">{selectedCategory.name}</span>
@@ -138,12 +149,31 @@ export function AddIncomeForm() {
                   Нажмите «Добавить» ↗
                 </div>
               ) : (
-                    incomeCategories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </SelectItem>
-                    ))
+                incomeCategories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </SelectItem>
+                ))
               )}
+            </SelectContent>
+          </Select>
+
+          {/* Currency selector */}
+          <Select value={currency} onValueChange={setCurrency}>
+            <SelectTrigger className="w-[70px] h-10 shrink-0">
+              <SelectValue>
+                {getCurrencySymbol(currency, currencies)}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {currencies.map((curr) => (
+                <SelectItem key={curr.code} value={curr.code}>
+                  <span className="flex items-center gap-2">
+                    <span className="font-medium">{curr.symbol}</span>
+                    <span className="text-muted-foreground text-xs">{curr.code}</span>
+                  </span>
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 
@@ -157,9 +187,11 @@ export function AddIncomeForm() {
               onKeyDown={handleKeyDown}
               min="0"
               step="0.01"
-              className="h-10 pr-8"
+              className="h-10 pr-10"
             />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₽</span>
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+              {currencySymbol}
+            </span>
           </div>
 
           {/* Submit button */}

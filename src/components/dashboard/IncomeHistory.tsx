@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useIncomes, useIncomeCategories, useUpdateIncome } from '@/hooks/useBudget';
+import { useCurrencies, formatMoney, getCurrencySymbol } from '@/hooks/useCurrencies';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,6 +21,7 @@ type PeriodFilter = 'all' | 'current' | 'last' | 'last3';
 export function IncomeHistory() {
   const { data: incomes = [] } = useIncomes();
   const { data: incomeCategories = [] } = useIncomeCategories();
+  const { data: currencies = [] } = useCurrencies();
   const updateIncome = useUpdateIncome();
   const queryClient = useQueryClient();
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('current');
@@ -30,6 +32,7 @@ export function IncomeHistory() {
   const [editAmount, setEditAmount] = useState('');
   const [editCategoryId, setEditCategoryId] = useState('');
   const [editDescription, setEditDescription] = useState('');
+  const [editCurrency, setEditCurrency] = useState('RUB');
 
   const getCategoryName = (categoryId: string | null) => {
     if (!categoryId) return 'Без категории';
@@ -64,6 +67,16 @@ export function IncomeHistory() {
     });
   }, [incomes, periodFilter]);
 
+  // Group totals by currency
+  const totalsByCurrency = useMemo(() => {
+    const totals: Record<string, number> = {};
+    filteredIncomes.forEach(income => {
+      const curr = income.currency || 'RUB';
+      totals[curr] = (totals[curr] || 0) + Number(income.amount);
+    });
+    return totals;
+  }, [filteredIncomes]);
+
   const groupedByDate = useMemo(() => {
     const groups: Record<string, typeof filteredIncomes> = {};
     
@@ -77,15 +90,22 @@ export function IncomeHistory() {
     
     return Object.entries(groups)
       .sort(([a], [b]) => b.localeCompare(a))
-      .map(([date, items]) => ({
-        date,
-        formattedDate: format(new Date(date), 'd MMMM yyyy', { locale: ru }),
-        items,
-        total: items.reduce((sum, i) => sum + Number(i.amount), 0)
-      }));
+      .map(([date, items]) => {
+        // Calculate totals by currency for this date
+        const dailyTotals: Record<string, number> = {};
+        items.forEach(item => {
+          const curr = item.currency || 'RUB';
+          dailyTotals[curr] = (dailyTotals[curr] || 0) + Number(item.amount);
+        });
+        
+        return {
+          date,
+          formattedDate: format(new Date(date), 'd MMMM yyyy', { locale: ru }),
+          items,
+          dailyTotals
+        };
+      });
   }, [filteredIncomes]);
-
-  const totalForPeriod = filteredIncomes.reduce((sum, i) => sum + Number(i.amount), 0);
 
   const handleDeleteIncome = async (incomeId: string) => {
     try {
@@ -108,6 +128,7 @@ export function IncomeHistory() {
     setEditAmount(String(income.amount));
     setEditCategoryId(income.category_id || '');
     setEditDescription(income.description || '');
+    setEditCurrency(income.currency || 'RUB');
   };
 
   const handleEditSave = async () => {
@@ -122,6 +143,7 @@ export function IncomeHistory() {
         amount: parseFloat(editAmount),
         category_id: editCategoryId,
         description: editDescription || null,
+        currency: editCurrency,
       });
       toast.success('Запись обновлена');
       setEditingIncome(null);
@@ -135,6 +157,12 @@ export function IncomeHistory() {
     current: 'Текущий месяц',
     last: 'Прошлый месяц',
     last3: 'Последние 3 месяца'
+  };
+
+  const formatTotals = (totals: Record<string, number>) => {
+    return Object.entries(totals)
+      .map(([curr, amount]) => formatMoney(amount, curr, currencies))
+      .join(' • ');
   };
 
   if (incomes.length === 0) {
@@ -183,7 +211,7 @@ export function IncomeHistory() {
             {/* Period summary */}
             <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
               <span className="text-sm text-muted-foreground">{periodLabels[periodFilter]}</span>
-              <span className="font-semibold">{totalForPeriod.toLocaleString('ru-RU')} ₽</span>
+              <span className="font-semibold text-sm">{formatTotals(totalsByCurrency)}</span>
             </div>
 
             {groupedByDate.length === 0 ? (
@@ -200,7 +228,7 @@ export function IncomeHistory() {
                         {group.formattedDate}
                       </div>
                       <span className="font-medium text-muted-foreground">
-                        {group.total.toLocaleString('ru-RU')} ₽
+                        {formatTotals(group.dailyTotals)}
                       </span>
                     </div>
                     
@@ -228,7 +256,7 @@ export function IncomeHistory() {
                           
                           <div className="flex items-center gap-1">
                             <span className="text-sm font-semibold text-primary mr-1">
-                              +{Number(income.amount).toLocaleString('ru-RU')} ₽
+                              +{formatMoney(Number(income.amount), income.currency || 'RUB', currencies)}
                             </span>
                             
                             <Button
@@ -254,7 +282,7 @@ export function IncomeHistory() {
                                 <AlertDialogHeader>
                                   <AlertDialogTitle>Удалить запись?</AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    Запись о доходе {Number(income.amount).toLocaleString('ru-RU')} ₽ будет удалена.
+                                    Запись о доходе {formatMoney(Number(income.amount), income.currency || 'RUB', currencies)} будет удалена.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
@@ -302,17 +330,38 @@ export function IncomeHistory() {
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm font-medium">Сумма</label>
-              <div className="relative">
-                <Input
-                  type="number"
-                  value={editAmount}
-                  onChange={(e) => setEditAmount(e.target.value)}
-                  min="0"
-                  step="0.01"
-                  className="pr-8"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₽</span>
+              <label className="text-sm font-medium">Сумма и валюта</label>
+              <div className="flex gap-2">
+                <Select value={editCurrency} onValueChange={setEditCurrency}>
+                  <SelectTrigger className="w-[80px]">
+                    <SelectValue>
+                      {getCurrencySymbol(editCurrency, currencies)}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {currencies.map((curr) => (
+                      <SelectItem key={curr.code} value={curr.code}>
+                        <span className="flex items-center gap-2">
+                          <span className="font-medium">{curr.symbol}</span>
+                          <span className="text-muted-foreground text-xs">{curr.code}</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div className="relative flex-1">
+                  <Input
+                    type="number"
+                    value={editAmount}
+                    onChange={(e) => setEditAmount(e.target.value)}
+                    min="0"
+                    step="0.01"
+                    className="pr-10"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                    {getCurrencySymbol(editCurrency, currencies)}
+                  </span>
+                </div>
               </div>
             </div>
             

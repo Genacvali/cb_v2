@@ -1,22 +1,49 @@
 import { useIncomes, useExpenseCategories } from '@/hooks/useBudget';
+import { useCurrencies, formatMoney } from '@/hooks/useCurrencies';
 import { Card, CardContent } from '@/components/ui/card';
 import { TrendingUp, Wallet, PieChart } from 'lucide-react';
+import { useMemo } from 'react';
 
 export function StatsCards() {
   const { data: incomes = [] } = useIncomes();
   const { data: expenseCategories = [] } = useExpenseCategories();
+  const { data: currencies = [] } = useCurrencies();
 
-  const totalIncome = incomes.reduce((sum, inc) => sum + Number(inc.amount), 0);
+  // Group incomes by currency
+  const incomesByCurrency = useMemo(() => {
+    const groups: Record<string, number> = {};
+    incomes.forEach(inc => {
+      const curr = inc.currency || 'RUB';
+      groups[curr] = (groups[curr] || 0) + Number(inc.amount);
+    });
+    return groups;
+  }, [incomes]);
+
   const categoriesCount = expenseCategories.length;
   
   const totalAllocatedPercent = expenseCategories
     .filter(c => c.allocation_type === 'percentage')
     .reduce((sum, c) => sum + c.allocation_value, 0);
 
+  // Format multi-currency display
+  const incomeDisplay = useMemo(() => {
+    const entries = Object.entries(incomesByCurrency);
+    if (entries.length === 0) return '0 ₽';
+    if (entries.length === 1) {
+      const [currency, amount] = entries[0];
+      return formatMoney(amount, currency, currencies);
+    }
+    // Multiple currencies - show primary and count
+    const sorted = entries.sort((a, b) => b[1] - a[1]);
+    const [primary] = sorted[0];
+    const primaryAmount = incomesByCurrency[primary];
+    return `${formatMoney(primaryAmount, primary, currencies)} +${entries.length - 1}`;
+  }, [incomesByCurrency, currencies]);
+
   const stats = [
     {
       title: 'Общий доход',
-      value: `${totalIncome.toLocaleString('ru-RU')} ₽`,
+      value: incomeDisplay,
       icon: TrendingUp,
       gradient: 'from-emerald-500 to-teal-500',
     },

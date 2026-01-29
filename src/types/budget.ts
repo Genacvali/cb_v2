@@ -1,3 +1,10 @@
+export interface Currency {
+  code: string;
+  name: string;
+  symbol: string;
+  is_default: boolean;
+}
+
 export interface Profile {
   id: string;
   user_id: string;
@@ -5,6 +12,7 @@ export interface Profile {
   display_name: string | null;
   onboarding_completed: boolean;
   tutorial_completed: boolean;
+  default_currency: string;
   created_at: string;
   updated_at: string;
 }
@@ -46,6 +54,7 @@ export interface Income {
   user_id: string;
   category_id: string | null;
   amount: number;
+  currency: string;
   description: string | null;
   created_at: string;
   category?: IncomeCategory;
