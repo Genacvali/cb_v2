@@ -25,24 +25,24 @@ export function StatsCards() {
     .filter(c => c.allocation_type === 'percentage')
     .reduce((sum, c) => sum + c.allocation_value, 0);
 
-  // Format multi-currency display - show all currencies
-  const incomeDisplay = useMemo(() => {
+  // Format multi-currency display - show all currencies as array for flexible rendering
+  const incomeEntries = useMemo(() => {
     const entries = Object.entries(incomesByCurrency);
-    if (entries.length === 0) return '0 ₽';
+    if (entries.length === 0) return [{ currency: 'RUB', amount: 0 }];
     // Show all currencies, sorted by amount descending
-    const sorted = entries.sort((a, b) => b[1] - a[1]);
-    return sorted.map(([currency, amount]) => formatMoney(amount, currency, currencies)).join(' / ');
-  }, [incomesByCurrency, currencies]);
+    return entries
+      .sort((a, b) => b[1] - a[1])
+      .map(([currency, amount]) => ({ currency, amount }));
+  }, [incomesByCurrency]);
 
   const stats = [
     {
       title: 'Общий доход',
-      value: incomeDisplay,
       icon: TrendingUp,
       gradient: 'from-emerald-500 to-teal-500',
     },
     {
-      title: 'Категорий расходов',
+      title: 'Категорий',
       value: categoriesCount.toString(),
       icon: Wallet,
       gradient: 'from-blue-500 to-indigo-500',
@@ -56,19 +56,34 @@ export function StatsCards() {
   ];
 
   return (
-    <div className="grid grid-cols-3 gap-2 md:gap-4 mb-4 md:mb-8">
-      {stats.map((stat) => (
+    <div className="grid grid-cols-3 gap-1.5 md:gap-4 mb-4 md:mb-8">
+      {stats.map((stat, idx) => (
         <Card key={stat.title} className="glass-card hover-lift overflow-hidden">
-          <CardContent className="p-3 md:p-6">
-            <div className="flex flex-col md:flex-row items-center md:justify-between gap-2">
-              <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-lg flex-shrink-0 md:order-2`}>
-                <stat.icon className="w-5 h-5 md:w-6 md:h-6 text-white" />
+          <CardContent className="p-2 md:p-6">
+            <div className="flex flex-col md:flex-row items-center md:justify-between gap-1 md:gap-2">
+              <div className={`w-9 h-9 md:w-12 md:h-12 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-lg flex-shrink-0 md:order-2`}>
+                <stat.icon className="w-4 h-4 md:w-6 md:h-6 text-white" />
               </div>
-              <div className="text-center md:text-left md:order-1">
-                <p className="text-[10px] md:text-sm font-medium text-muted-foreground mb-0.5 md:mb-1 leading-tight">
+              <div className="text-center md:text-left md:order-1 min-w-0 w-full">
+                <p className="text-[9px] md:text-sm font-medium text-muted-foreground mb-0.5 md:mb-1 leading-tight truncate">
                   {stat.title}
                 </p>
-                <p className="text-sm md:text-2xl font-bold">{stat.value}</p>
+                {idx === 0 ? (
+                  // Multi-currency income display - stacked on mobile
+                  <div className="flex flex-col md:flex-row md:gap-2 items-center">
+                    {incomeEntries.map((entry, i) => (
+                      <span 
+                        key={entry.currency} 
+                        className="text-[11px] md:text-2xl font-bold leading-tight whitespace-nowrap"
+                      >
+                        {formatMoney(entry.amount, entry.currency, currencies)}
+                        {i < incomeEntries.length - 1 && <span className="hidden md:inline"> / </span>}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs md:text-2xl font-bold">{stat.value}</p>
+                )}
               </div>
             </div>
           </CardContent>
