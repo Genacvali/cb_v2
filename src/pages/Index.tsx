@@ -2,7 +2,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile, useUpdateProfile } from '@/hooks/useBudget';
 import { AuthForm } from '@/components/auth/AuthForm';
 import { WelcomeTutorial } from '@/components/onboarding/WelcomeTutorial';
-import { TemplateSelector } from '@/components/onboarding/TemplateSelector';
 import { Dashboard } from '@/components/dashboard/Dashboard';
 import { Loader2 } from 'lucide-react';
 
@@ -34,17 +33,17 @@ const Index = () => {
     );
   }
 
-  // Show tutorial for first-time users (before template selection)
+  // Show tutorial for first-time users (includes category creation)
   if (profile && !profile.tutorial_completed) {
     const handleTutorialComplete = () => {
-      updateProfile.mutate({ tutorial_completed: true });
+      updateProfile.mutate({ tutorial_completed: true, onboarding_completed: true });
     };
     return <WelcomeTutorial onComplete={handleTutorialComplete} />;
   }
 
-  // Show onboarding if not completed
-  if (!profile?.onboarding_completed) {
-    return <TemplateSelector />;
+  // Legacy check: if tutorial done but onboarding not, mark it complete
+  if (profile && !profile.onboarding_completed) {
+    updateProfile.mutate({ onboarding_completed: true });
   }
 
   // Show dashboard
