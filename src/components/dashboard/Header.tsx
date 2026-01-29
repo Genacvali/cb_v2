@@ -10,7 +10,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, User, Wallet, Palette } from 'lucide-react';
+import { LogOut, User, Palette } from 'lucide-react';
+import crystalLogo from '@/assets/crystal-logo.png';
 
 export function Header() {
   const { user, signOut } = useAuth();
@@ -23,9 +24,11 @@ export function Header() {
     <header className="sticky top-0 z-50 glass-card border-b border-border/50">
       <div className="container mx-auto px-4 h-14 md:h-16 flex items-center justify-between">
         <div className="flex items-center gap-2 md:gap-3">
-          <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl gradient-primary flex items-center justify-center shadow-md">
-            <Wallet className="w-4 h-4 md:w-5 md:h-5 text-white" />
-          </div>
+          <img 
+            src={crystalLogo} 
+            alt="CrystalBudget" 
+            className="w-8 h-8 md:w-10 md:h-10 object-contain"
+          />
           <h1 className="text-lg md:text-xl font-bold gradient-text">CrystalBudget</h1>
         </div>
 

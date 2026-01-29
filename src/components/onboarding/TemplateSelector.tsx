@@ -3,11 +3,12 @@ import { useApplyTemplate } from '@/hooks/useBudget';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Wallet, Laptop, Users, Check, Loader2 } from 'lucide-react';
+import { Laptop, Users, Check, Loader2, Gem } from 'lucide-react';
 import { useState } from 'react';
+import crystalLogo from '@/assets/crystal-logo.png';
 
 const iconMap: Record<string, React.ReactNode> = {
-  wallet: <Wallet className="w-6 h-6" />,
+  wallet: <Gem className="w-6 h-6" />,
   laptop: <Laptop className="w-6 h-6" />,
   users: <Users className="w-6 h-6" />,
 };
@@ -30,6 +31,11 @@ export function TemplateSelector() {
       
       <div className="relative z-10 w-full max-w-4xl">
         <div className="text-center mb-8">
+          <img 
+            src={crystalLogo} 
+            alt="CrystalBudget" 
+            className="mx-auto w-20 h-20 object-contain mb-4"
+          />
           <h1 className="text-3xl font-bold mb-2">Добро пожаловать в CrystalBudget!</h1>
           <p className="text-muted-foreground">Выберите шаблон для быстрого старта</p>
         </div>
