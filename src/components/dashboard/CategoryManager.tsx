@@ -50,9 +50,13 @@ interface CategoryFormData {
 
 interface CategoryManagerProps {
   triggerClassName?: string;
+  showLabel?: boolean;
 }
 
-export function CategoryManager({ triggerClassName }: CategoryManagerProps) {
+export function CategoryManager({
+  triggerClassName,
+  showLabel = true,
+}: CategoryManagerProps) {
   const { data: incomeCategories = [] } = useIncomeCategories();
   const { data: expenseCategories = [] } = useExpenseCategories();
   const { data: allAllocations = [] } = useAllAllocations();
@@ -165,7 +169,9 @@ export function CategoryManager({ triggerClassName }: CategoryManagerProps) {
             className={cn("gap-2", triggerClassName)}
           >
             <Settings className="w-4 h-4" />
-            Управление категориями
+            <span className={showLabel ? undefined : 'sr-only'}>
+              Управление категориями
+            </span>
           </Button>
         </DialogTrigger>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">

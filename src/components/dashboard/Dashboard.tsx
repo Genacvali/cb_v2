@@ -5,7 +5,6 @@ import { StatsCards } from './StatsCards';
 import { BudgetChart } from './BudgetChart';
 import { AddIncomeForm } from './AddIncomeForm';
 import { CategoryAllocation } from './CategoryAllocation';
-import { CategoryManager } from './CategoryManager';
 import { IncomeHistory } from './IncomeHistory';
 
 export function Dashboard() {
@@ -21,11 +20,6 @@ export function Dashboard() {
       <Header />
       
       <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
-        {/* Category manager - visible on desktop */}
-        <div className="hidden md:flex justify-end mb-4 md:mb-6">
-          <CategoryManager />
-        </div>
-        
         <StatsCards />
         
         <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 items-start">

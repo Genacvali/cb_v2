@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { LogOut, User, Palette, Sun, Bot } from 'lucide-react';
 import crystalLogo from '@/assets/crystal-logo.png';
 import { TelegramLink } from './TelegramLink';
+import { CategoryManager } from './CategoryManager';
 
 export function Header() {
   const { user, signOut } = useAuth();
@@ -37,6 +38,10 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-2">
+          <CategoryManager
+            showLabel={false}
+            triggerClassName="h-8 w-8 md:h-10 md:w-10 p-0 justify-center"
+          />
           {/* Theme Switcher */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
