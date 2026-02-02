@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { CategoryIcon } from '@/components/icons/CategoryIcon';
+import { cn } from '@/lib/utils';
 import { 
   Dialog, 
   DialogContent, 
@@ -47,7 +48,11 @@ interface CategoryFormData {
   color: string;
 }
 
-export function CategoryManager() {
+interface CategoryManagerProps {
+  triggerClassName?: string;
+}
+
+export function CategoryManager({ triggerClassName }: CategoryManagerProps) {
   const { data: incomeCategories = [] } = useIncomeCategories();
   const { data: expenseCategories = [] } = useExpenseCategories();
   const { data: allAllocations = [] } = useAllAllocations();
@@ -154,7 +159,11 @@ export function CategoryManager() {
     <>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn("gap-2", triggerClassName)}
+          >
             <Settings className="w-4 h-4" />
             Управление категориями
           </Button>

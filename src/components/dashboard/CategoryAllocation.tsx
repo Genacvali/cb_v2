@@ -5,14 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CategoryIcon } from '@/components/icons/CategoryIcon';
-import { SwipeableCategory } from './SwipeableCategory';
 import { ExpenseCategoryEditor } from './ExpenseCategoryEditor';
 import { ExpenseCategoryForm } from './ExpenseCategoryForm';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ExpenseCategory } from '@/types/budget';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus } from 'lucide-react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 export function CategoryAllocation() {
   const {
@@ -91,7 +90,7 @@ export function CategoryAllocation() {
     setDeleteDialogOpen(false);
     setCategoryToDelete(null);
   };
-  const renderCategoryContent = (cat: ExpenseCategory) => {
+  const renderCategoryContent = (cat: ExpenseCategory, showActions = false) => {
     const categoryAllocations = allAllocations.filter(a => a.expense_category_id === cat.id);
     const plannedTotal = getCategoryPlannedTotal(cat.id);
     return (
@@ -101,22 +100,45 @@ export function CategoryAllocation() {
             <CategoryIcon icon={cat.icon} className="text-sm md:text-base" />
           </div>
           <div className="min-w-0 flex-1">
-            <span className="font-medium text-xs md:text-base block truncate">{cat.name}</span>
+            <span className="font-medium text-sm md:text-base block truncate">{cat.name}</span>
             {categoryAllocations.length > 0 && (
-              <p className="text-[8px] md:text-xs text-muted-foreground truncate mt-0.5">
-                {categoryAllocations.map((a, i) => (
+              <p className="text-[10px] md:text-xs text-muted-foreground truncate mt-0.5">
+                {categoryAllocations.slice(0, 2).map((a, i) => (
                   <span key={a.id}>
-                    {a.income_category?.name}: {a.allocation_type === 'percentage' ? `${a.allocation_value}%` : `${a.allocation_value.toLocaleString('ru-RU')}₽`}
-                    {i < categoryAllocations.length - 1 && ' • '}
+                    {a.income_category?.name}: {a.allocation_type === 'percentage' ? `${Math.round(a.allocation_value)}%` : `${Math.round(a.allocation_value).toLocaleString('ru-RU')}₽`}
+                    {i < Math.min(categoryAllocations.length, 2) - 1 && ' • '}
                   </span>
                 ))}
+                {categoryAllocations.length > 2 && ` • +${categoryAllocations.length - 2}`}
               </p>
             )}
           </div>
         </div>
-        <span className="text-sm md:text-base font-medium whitespace-nowrap shrink-0">
-          {plannedTotal.toLocaleString('ru-RU')} ₽
-        </span>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className="text-sm md:text-base font-medium tabular-nums whitespace-nowrap">
+            {Math.round(plannedTotal).toLocaleString('ru-RU')} ₽
+          </span>
+          {showActions && (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleEdit(cat)}
+                className="h-7 w-7 text-muted-foreground hover:text-foreground"
+              >
+                <Pencil className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleDeleteClick(cat)}
+                className="h-7 w-7 text-destructive hover:text-destructive"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </>
+          )}
+        </div>
       </div>
     );
   };
@@ -152,11 +174,11 @@ export function CategoryAllocation() {
           {expenseCategories.length === 0 ? <div className="text-center py-4 md:py-6">
               <p className="text-muted-foreground text-xs md:text-sm mb-1 md:mb-2">Нет категорий расходов</p>
               <p className="text-[10px] md:text-xs text-muted-foreground">Нажмите «+» чтобы создать</p>
-            </div> : expenseCategories.map(cat => isMobile ? <SwipeableCategory key={cat.id} onEdit={() => handleEdit(cat)} onDelete={() => handleDeleteClick(cat)}>
-                  {renderCategoryContent(cat)}
-                </SwipeableCategory> : <div key={cat.id}>
-                  {renderCategoryContent(cat)}
-                </div>)}
+            </div> : expenseCategories.map(cat => (
+            <div key={cat.id}>
+              {renderCategoryContent(cat, isMobile)}
+            </div>
+            ))}
 
           {totalIncome > 0 && <div className="pt-2 md:pt-4 mt-2 md:mt-4 border-t border-border">
               <div className="flex items-center justify-between text-[10px] md:text-sm">

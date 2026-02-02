@@ -1,4 +1,5 @@
-import { useRef } from 'react';
+import { useRef, type RefObject } from 'react';
+import { Button } from '@/components/ui/button';
 import { Header } from './Header';
 import { StatsCards } from './StatsCards';
 import { BudgetChart } from './BudgetChart';
@@ -11,12 +12,16 @@ export function Dashboard() {
   const incomeRef = useRef<HTMLDivElement>(null);
   const allocationRef = useRef<HTMLDivElement>(null);
 
+  const scrollTo = (ref: RefObject<HTMLDivElement>) => {
+    ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       <Header />
       
       <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
-        {/* Category manager - hidden on mobile (available in burger menu) */}
+        {/* Category manager - visible on desktop */}
         <div className="hidden md:flex justify-end mb-4 md:mb-6">
           <CategoryManager />
         </div>
