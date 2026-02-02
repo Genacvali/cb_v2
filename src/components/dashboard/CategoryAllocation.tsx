@@ -180,14 +180,6 @@ export function CategoryAllocation() {
             </div>
             ))}
 
-          {totalIncome > 0 && <div className="pt-2 md:pt-4 mt-2 md:mt-4 border-t border-border">
-              <div className="flex items-center justify-between text-[10px] md:text-sm">
-                <span className="text-muted-foreground">Нераспределено</span>
-                <span className="font-medium">
-                  {(totalIncome - totalAllocated).toLocaleString('ru-RU')} ₽
-                </span>
-              </div>
-            </div>}
         </CardContent>
       </Card>
 
