@@ -1,27 +1,30 @@
 import { useMemo, useState } from 'react';
 import { useExpenseCategories, useIncomes, useIncomeCategories, useDeleteExpenseCategory } from '@/hooks/useBudget';
 import { useAllAllocations } from '@/hooks/useAllocations';
+import { useDisplayMoney } from '@/hooks/useExchangeRates';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CategoryIcon } from '@/components/icons/CategoryIcon';
 import { ExpenseCategoryEditor } from './ExpenseCategoryEditor';
 import { ExpenseCategoryForm } from './ExpenseCategoryForm';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { ExpenseCategory } from '@/types/budget';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Pencil, Plus, Trash2, Wand2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { DistributeRemainingDialog } from './DistributeRemainingDialog';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 export function CategoryAllocation() {
   const { data: expenseCategories = [] } = useExpenseCategories();
   const { data: incomes = [] } = useIncomes();
   const { data: incomeCategories = [] } = useIncomeCategories();
   const { data: allAllocations = [] } = useAllAllocations();
+  const {
+    money, isConverted, displayCurrency, defaultCurrency, rate, rateDate, ratesLoading, resetDisplayCurrency,
+  } = useDisplayMoney();
   const deleteExpenseCategory = useDeleteExpenseCategory();
-  const isMobile = useIsMobile();
 
   const [editingCategory, setEditingCategory] = useState<ExpenseCategory | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -67,7 +70,10 @@ export function CategoryAllocation() {
   );
 
   const allocationPercent = totalIncome > 0 ? Math.round(totalAllocated / totalIncome * 100) : 0;
-  const remainingTotal = Math.max(totalIncome - totalAllocated, 0);
+  // Positive: money left to assign. Negative: allocations exceed income.
+  const balance = totalIncome - totalAllocated;
+  const remainingTotal = balance > 0.5 ? balance : 0;
+  const overspendTotal = balance < -0.5 ? -balance : 0;
 
   // ── Category actions ──────────────────────────────────────────────────────
   const handleEdit = (category: ExpenseCategory) => { setEditingCategory(category); setEditDialogOpen(true); };
@@ -76,56 +82,59 @@ export function CategoryAllocation() {
     if (!categoryToDelete) return;
     try {
       await deleteExpenseCategory.mutateAsync(categoryToDelete.id);
-      toast.success('\u041a\u0430\u0442\u0435\u0433\u043e\u0440\u0438\u044f \u0443\u0434\u0430\u043b\u0435\u043d\u0430');
+      toast.success('Категория удалена');
     } catch {
-      toast.error('\u041e\u0448\u0438\u0431\u043a\u0430 \u043f\u0440\u0438 \u0443\u0434\u0430\u043b\u0435\u043d\u0438\u0438');
+      toast.error('Ошибка при удалении');
     }
     setDeleteDialogOpen(false);
     setCategoryToDelete(null);
+    setEditDialogOpen(false);
+    setEditingCategory(null);
   };
 
-  const renderCategoryContent = (cat: ExpenseCategory, showActions = false) => {
+  const renderCategoryContent = (cat: ExpenseCategory) => {
     const categoryAllocations = allAllocations.filter(a => a.expense_category_id === cat.id);
     const plannedTotal = getCategoryPlannedTotal(cat.id);
+    const hasAllocations = categoryAllocations.length > 0;
     return (
-      <div className="p-2 md:p-0 flex items-start justify-between gap-3">
+      <button
+        type="button"
+        onClick={() => handleEdit(cat)}
+        className="w-full p-2 md:p-0 flex items-start justify-between gap-3 text-left rounded-lg hover:bg-secondary/40 transition-colors"
+        aria-label={`Редактировать ${cat.name}`}
+      >
         <div className="flex gap-2 min-w-0 flex-1">
           <div className="w-7 h-7 md:w-9 md:h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-secondary/50 overflow-visible">
             <CategoryIcon icon={cat.icon} className="text-sm md:text-base" />
           </div>
           <div className="min-w-0 flex-1">
             <span className="font-medium text-sm md:text-base block truncate">{cat.name}</span>
-            {categoryAllocations.length > 0 && (
-              <p className="text-[10px] md:text-xs text-muted-foreground truncate mt-0.5">
-                {categoryAllocations.slice(0, 2).map((a, i) => (
-                  <span key={a.id}>
-                    {a.income_category?.name}: {a.allocation_type === 'percentage'
-                      ? `${Math.round(a.allocation_value)}%`
-                      : `${Math.round(a.allocation_value).toLocaleString('ru-RU')}₽`}
-                    {i < Math.min(categoryAllocations.length, 2) - 1 && ' • '}
-                  </span>
-                ))}
-                {categoryAllocations.length > 2 && ` • +${categoryAllocations.length - 2}`}
-              </p>
-            )}
+            <p className="text-[10px] md:text-xs text-muted-foreground truncate mt-0.5">
+              {hasAllocations ? (
+                <>
+                  {categoryAllocations.slice(0, 2).map((a, i) => (
+                    <span key={a.id}>
+                      {a.income_category?.name}: {a.allocation_type === 'percentage'
+                        ? `${Math.round(a.allocation_value)}%`
+                        : money(Math.round(a.allocation_value))}
+                      {i < Math.min(categoryAllocations.length, 2) - 1 && ' • '}
+                    </span>
+                  ))}
+                  {categoryAllocations.length > 2 && ` • +${categoryAllocations.length - 2}`}
+                </>
+              ) : (
+                <span className="italic">Источник не задан</span>
+              )}
+            </p>
           </div>
         </div>
-        <div className="flex items-center gap-1.5 shrink-0">
-          <span className="text-sm md:text-base font-medium tabular-nums whitespace-nowrap">
-            {Math.round(plannedTotal).toLocaleString('ru-RU')} ₽
-          </span>
-          {showActions && (
-            <>
-              <Button variant="ghost" size="icon" onClick={() => handleEdit(cat)} className="h-7 w-7 text-muted-foreground hover:text-foreground">
-                <Pencil className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(cat)} className="h-7 w-7 text-destructive hover:text-destructive">
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
+        <span className={cn(
+          'text-sm md:text-base font-medium tabular-nums whitespace-nowrap shrink-0',
+          !hasAllocations && 'text-muted-foreground',
+        )}>
+          {money(Math.round(plannedTotal))}
+        </span>
+      </button>
     );
   };
 
@@ -135,27 +144,34 @@ export function CategoryAllocation() {
       <CardHeader className="flex flex-row items-center justify-between gap-1 md:gap-2 p-3 md:p-6">
         <div className="flex items-center gap-1.5 md:gap-2 min-w-0">
           <CardTitle className="text-sm md:text-lg truncate">Категории расходов</CardTitle>
-          <Badge variant={allocationPercent >= 100 ? 'default' : 'secondary'} className="text-[10px] md:text-xs px-1.5 shrink-0">
+          <Badge
+            variant={overspendTotal > 0 ? 'destructive' : allocationPercent >= 100 ? 'default' : 'secondary'}
+            className="text-[10px] md:text-xs px-1.5 shrink-0"
+          >
             {allocationPercent}%
           </Badge>
-          {remainingTotal > 0 && (
-            <>
-              <span className="text-[10px] md:text-xs text-muted-foreground whitespace-nowrap">
-                Остаток: {Math.round(remainingTotal).toLocaleString('ru-RU')} ₽
-              </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-5 w-5 text-muted-foreground hover:text-foreground shrink-0"
-                title="Распределить остаток"
-                onClick={() => setDistributeDialogOpen(true)}
-              >
-                <Wand2 className="w-3 h-3" />
-              </Button>
-            </>
+          {(remainingTotal > 0 || overspendTotal > 0) && (
+            <span className={cn(
+              'text-[10px] md:text-xs whitespace-nowrap',
+              overspendTotal > 0 ? 'text-destructive font-medium' : 'text-muted-foreground',
+            )}>
+              {overspendTotal > 0
+                ? `Перерасход: ${money(Math.round(overspendTotal))}`
+                : `Остаток: ${money(Math.round(remainingTotal))}`}
+            </span>
           )}
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 shrink-0">
+          {(remainingTotal > 0 || overspendTotal > 0) && (
+            <Button
+              variant={overspendTotal > 0 ? 'destructive' : 'secondary'}
+              size="sm"
+              className="h-7 md:h-8 px-2.5 text-xs whitespace-nowrap"
+              onClick={() => setDistributeDialogOpen(true)}
+            >
+              {overspendTotal > 0 ? 'Снять перерасход' : 'Распределить'}
+            </Button>
+          )}
           {/* ── Add category ── */}
           <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
             <DialogTrigger asChild>
@@ -183,9 +199,28 @@ export function CategoryAllocation() {
           )
           : expenseCategories.map(cat => (
             <div key={cat.id}>
-              {renderCategoryContent(cat, isMobile)}
+              {renderCategoryContent(cat)}
             </div>
           ))}
+
+        {isConverted && (
+          <div className="flex items-center justify-between gap-2 pt-2 mt-1 border-t border-border/50 text-[10px] md:text-xs text-muted-foreground">
+            <span className="truncate tabular-nums">
+              {ratesLoading
+                ? 'Загружаем курс…'
+                : rate
+                  ? `≈ в ${displayCurrency} по курсу 1 ${displayCurrency} = ${new Intl.NumberFormat('ru-RU', { maximumFractionDigits: rate >= 100 ? 2 : 4 }).format(rate)} ${defaultCurrency}${rateDate ? ` · ${new Date(rateDate).toLocaleDateString('ru-RU')}` : ''}`
+                  : `Курс ${displayCurrency} недоступен — показаны суммы в ${defaultCurrency}`}
+            </span>
+            <button
+              type="button"
+              onClick={resetDisplayCurrency}
+              className="shrink-0 underline hover:text-foreground"
+            >
+              Вернуть {defaultCurrency}
+            </button>
+          </div>
+        )}
       </CardContent>
     </Card>
 
@@ -194,13 +229,14 @@ export function CategoryAllocation() {
       category={editingCategory}
       open={editDialogOpen}
       onOpenChange={open => { setEditDialogOpen(open); if (!open) setEditingCategory(null); }}
+      onDelete={handleDeleteClick}
     />
 
     {/* Distribute remaining dialog */}
     <DistributeRemainingDialog
       open={distributeDialogOpen}
       onOpenChange={setDistributeDialogOpen}
-      remainingTotal={remainingTotal}
+      balance={balance}
       expenseCategories={expenseCategories}
       incomeCategories={incomeCategories}
       allAllocations={allAllocations}

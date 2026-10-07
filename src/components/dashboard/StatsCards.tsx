@@ -1,6 +1,6 @@
 import { useIncomes, useIncomeCategories } from '@/hooks/useBudget';
 import { useAllAllocations } from '@/hooks/useAllocations';
-import { useCurrencies, formatMoney } from '@/hooks/useCurrencies';
+import { useDisplayMoney } from '@/hooks/useExchangeRates';
 import { Card, CardContent } from '@/components/ui/card';
 import { CategoryIcon } from '@/components/icons/CategoryIcon';
 import { TrendingUp } from 'lucide-react';
@@ -10,7 +10,8 @@ export function StatsCards() {
   const { data: incomes = [] } = useIncomes();
   const { data: incomeCategories = [] } = useIncomeCategories();
   const { data: allAllocations = [] } = useAllAllocations();
-  const { data: currencies = [] } = useCurrencies();
+  // Honours the dashboard "display currency" (converts via live rates when set)
+  const { money } = useDisplayMoney();
 
   // Group incomes by currency
   const incomesByCurrency = useMemo(() => {
@@ -130,7 +131,7 @@ export function StatsCards() {
                     key={entry.currency}
                     className="text-sm md:text-lg font-bold leading-tight tabular-nums"
                   >
-                    {formatMoney(entry.amount, entry.currency, currencies)}
+                    {money(entry.amount, entry.currency)}
                   </span>
                 ))}
                 {incomeEntries.length > 2 && (
@@ -165,10 +166,10 @@ export function StatsCards() {
                 </p>
                 <div className="mt-0.5 md:mt-1 space-y-0.5">
                   <p className="text-sm md:text-base font-bold tabular-nums">
-                    {formatMoney(card.allocated, card.currency, currencies)}
+                    {money(card.allocated, card.currency)}
                   </p>
                   <p className="text-[10px] md:text-xs text-muted-foreground">
-                    Осталось {formatMoney(card.remaining, card.currency, currencies)}
+                    Осталось {money(card.remaining, card.currency)}
                   </p>
                 </div>
               </div>

@@ -5,15 +5,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Trash2 } from 'lucide-react';
 import { ExpenseCategoryForm } from './ExpenseCategoryForm';
 
 interface Props {
   category: ExpenseCategory | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onDelete?: (category: ExpenseCategory) => void;
 }
 
-export function ExpenseCategoryEditor({ category, open, onOpenChange }: Props) {
+export function ExpenseCategoryEditor({ category, open, onOpenChange, onDelete }: Props) {
   if (!category) return null;
 
   return (
@@ -31,6 +34,19 @@ export function ExpenseCategoryEditor({ category, open, onOpenChange }: Props) {
             isEditing={true}
             onClose={() => onOpenChange(false)}
           />
+          {onDelete && (
+            <div className="px-4 pb-4">
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full text-destructive hover:text-destructive"
+                onClick={() => onDelete(category)}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Удалить категорию
+              </Button>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

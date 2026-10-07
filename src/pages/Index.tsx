@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile, useUpdateProfile } from '@/hooks/useBudget';
 import { AuthForm } from '@/components/auth/AuthForm';
@@ -9,6 +10,16 @@ const Index = () => {
   const { user, loading: authLoading } = useAuth();
   const { data: profile, isLoading: profileLoading } = useProfile();
   const updateProfile = useUpdateProfile();
+
+  // Legacy: if tutorial is done but onboarding flag is stale, sync it once.
+  // Must live in an effect — calling mutate() during render re-fires on every render.
+  const needsOnboardingSync = !!profile && profile.tutorial_completed && !profile.onboarding_completed;
+  useEffect(() => {
+    if (needsOnboardingSync && !updateProfile.isPending) {
+      updateProfile.mutate({ onboarding_completed: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [needsOnboardingSync]);
 
   // Show loading while checking auth
   if (authLoading) {
@@ -39,11 +50,6 @@ const Index = () => {
       updateProfile.mutate({ tutorial_completed: true, onboarding_completed: true });
     };
     return <WelcomeTutorial onComplete={handleTutorialComplete} />;
-  }
-
-  // Legacy check: if tutorial done but onboarding not, mark it complete
-  if (profile && !profile.onboarding_completed) {
-    updateProfile.mutate({ onboarding_completed: true });
   }
 
   // Show dashboard

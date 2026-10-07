@@ -11,35 +11,34 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const THEME_STORAGE_KEY = 'crystalbudget-theme';
+const THEMES: Theme[] = ['light', 'dark', 'night', 'pink', 'ebony'];
+
+function readStoredTheme(): Theme {
+  if (typeof window === 'undefined') return 'light';
+  try {
+    const stored = localStorage.getItem(THEME_STORAGE_KEY);
+    return THEMES.includes(stored as Theme) ? (stored as Theme) : 'light';
+  } catch {
+    return 'light';
+  }
+}
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('light');
-  const [mounted, setMounted] = useState(false);
-
-  // Initialize theme from localStorage after mount
-  useEffect(() => {
-    const stored = localStorage.getItem(THEME_STORAGE_KEY) as Theme;
-    if (stored && ['light', 'dark', 'night', 'pink', 'ebony'].includes(stored)) {
-      setThemeState(stored);
-    }
-    setMounted(true);
-  }, []);
+  // Lazy init from storage so the first render already uses the saved theme
+  // (index.html applies the class pre-paint; this keeps React state in sync).
+  const [theme, setThemeState] = useState<Theme>(readStoredTheme);
 
   // Apply theme to document
   useEffect(() => {
-    if (!mounted) return;
-    
     const root = document.documentElement;
-    
-    // Remove all theme classes
-    root.classList.remove('light', 'dark', 'night', 'pink', 'ebony');
-    
-    // Add current theme class
+    root.classList.remove(...THEMES);
     root.classList.add(theme);
-    
-    // Store preference
-    localStorage.setItem(THEME_STORAGE_KEY, theme);
-  }, [theme, mounted]);
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, theme);
+    } catch {
+      // Storage may be unavailable (private mode); theme still applies for the session.
+    }
+  }, [theme]);
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);

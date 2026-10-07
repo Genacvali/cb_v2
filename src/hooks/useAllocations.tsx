@@ -7,7 +7,7 @@ export function useExpenseCategoryAllocations(expenseCategoryId?: string) {
   const { user } = useAuth();
   
   return useQuery({
-    queryKey: ['expense-category-allocations', expenseCategoryId],
+    queryKey: ['expense-category-allocations', user?.id, expenseCategoryId],
     queryFn: async () => {
       if (!user || !expenseCategoryId) return [];
       const { data, error } = await supabase
@@ -116,10 +116,11 @@ export function useBulkSaveAllocations() {
       if (!user) throw new Error('Not authenticated');
       
       // Delete existing allocations for this expense category
-      await supabase
+      const { error: deleteError } = await supabase
         .from('expense_category_allocations')
         .delete()
         .eq('expense_category_id', expenseCategoryId);
+      if (deleteError) throw deleteError;
       
       // Insert new allocations
       if (allocations.length > 0) {

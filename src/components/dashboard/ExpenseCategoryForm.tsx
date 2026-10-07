@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { CategoryIcon } from '@/components/icons/CategoryIcon';
-import { Plus, Trash2, Lightbulb, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Trash2, Lightbulb, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ExpenseCategory } from '@/types/budget';
 import { CATEGORY_EMOJI_OPTIONS, DEFAULT_CATEGORY_COLOR } from '@/constants/categoryOptions';
@@ -57,9 +57,13 @@ export function ExpenseCategoryForm({ category, isEditing = false, onClose, onSu
 
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('🛒');
-  const [color] = useState(DEFAULT_CATEGORY_COLOR);
+  // Preserve the existing color on edit; the form has no color picker, so
+  // falling back to the default here would silently reset template colors.
+  const color = (isEditing && category?.color) || DEFAULT_CATEGORY_COLOR;
   const [allocations, setAllocations] = useState<AllocationFormData[]>([]);
   const [showAllocations, setShowAllocations] = useState(false);
+
+  const isSaving = addCategory.isPending || updateCategory.isPending || bulkSaveAllocations.isPending;
 
   useEffect(() => {
     if (category && isEditing) {
@@ -125,18 +129,43 @@ export function ExpenseCategoryForm({ category, isEditing = false, onClose, onSu
     return 'RUB'; // Default
   };
 
+  const validateAllocations = (): string | null => {
+    for (const a of allocations) {
+      if (!a.income_category_id) return 'Выберите источник дохода для каждого распределения';
+      if (!(a.allocation_value > 0)) return 'Сумма или процент распределения должны быть больше нуля';
+      if (a.allocation_type === 'percentage' && a.allocation_value > 100) return 'Процент не может быть больше 100';
+    }
+    // Warn when one income source is over-allocated by percentage within this category
+    const percentBySource: Record<string, number> = {};
+    for (const a of allocations) {
+      if (a.allocation_type === 'percentage') {
+        percentBySource[a.income_category_id] = (percentBySource[a.income_category_id] || 0) + a.allocation_value;
+      }
+    }
+    const over = Object.entries(percentBySource).find(([, p]) => p > 100);
+    if (over) return `Суммарный процент от «${getIncomeCategoryName(over[0])}» превышает 100`;
+    return null;
+  };
+
   const handleSave = async () => {
-    if (!name.trim()) {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
       toast.error('Введите название категории');
       return;
     }
+    const validationError = validateAllocations();
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
+    if (isSaving) return;
 
     try {
       if (isEditing && category) {
         // Update existing category
         await updateCategory.mutateAsync({
           id: category.id,
-          name,
+          name: trimmedName,
           icon,
           color,
         });
@@ -151,7 +180,7 @@ export function ExpenseCategoryForm({ category, isEditing = false, onClose, onSu
       } else {
         // Create new category
         const newCategory = await addCategory.mutateAsync({
-          name,
+          name: trimmedName,
           icon,
           color,
           allocation_type: 'percentage',
@@ -185,7 +214,14 @@ export function ExpenseCategoryForm({ category, isEditing = false, onClose, onSu
           placeholder="Например: Кафе"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              handleSave();
+            }
+          }}
           className="bg-secondary/50"
+          autoFocus={!isEditing}
         />
       </div>
 
@@ -315,12 +351,15 @@ export function ExpenseCategoryForm({ category, isEditing = false, onClose, onSu
                       <div className="relative">
                         <Input
                           type="number"
+                          min={0}
+                          max={allocation.allocation_type === 'percentage' ? 100 : undefined}
+                          step={allocation.allocation_type === 'percentage' ? 1 : 0.01}
                           value={allocation.allocation_value || ''}
                           onChange={(e) =>
                             handleAllocationChange(
                               index,
                               'allocation_value',
-                              parseFloat(e.target.value) || 0
+                              Math.max(0, parseFloat(e.target.value) || 0)
                             )
                           }
                           placeholder="0"
@@ -342,10 +381,11 @@ export function ExpenseCategoryForm({ category, isEditing = false, onClose, onSu
 
       {/* Actions */}
       <div className="flex gap-2 pt-2">
-        <Button onClick={handleSave} className="flex-1 gradient-primary">
+        <Button onClick={handleSave} className="flex-1 gradient-primary" disabled={isSaving || !name.trim()}>
+          {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
           {isEditing ? 'Сохранить' : 'Создать'}
         </Button>
-        <Button variant="outline" onClick={onClose}>
+        <Button variant="outline" onClick={onClose} disabled={isSaving}>
           Отмена
         </Button>
       </div>

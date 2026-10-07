@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useIncomeCategories, useAddIncome, useResetIncomes, useIncomes, useProfile } from '@/hooks/useBudget';
+import { useIncomeCategories, useAddIncome, useProfile } from '@/hooks/useBudget';
 import { useCurrencies, getCurrencySymbol } from '@/hooks/useCurrencies';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,8 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { QuickCategoryAdd } from './QuickCategoryAdd';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Plus, Loader2, Wallet, RotateCcw } from 'lucide-react';
+import { Plus, Loader2, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function AddIncomeForm() {
@@ -18,11 +17,9 @@ export function AddIncomeForm() {
   const [isStartingBalance, setIsStartingBalance] = useState(false);
   
   const { data: incomeCategories = [] } = useIncomeCategories();
-  const { data: incomes = [] } = useIncomes();
   const { data: profile } = useProfile();
   const { data: currencies = [] } = useCurrencies();
   const addIncome = useAddIncome();
-  const resetIncomes = useResetIncomes();
   const isMobile = useIsMobile();
 
   // Set default currency from profile
@@ -32,15 +29,6 @@ export function AddIncomeForm() {
     }
   }, [profile?.default_currency]);
 
-  const handleReset = async () => {
-    try {
-      await resetIncomes.mutateAsync();
-      toast.success('Доходы обнулены. Введите новую сумму для распределения.');
-    } catch {
-      toast.error('Ошибка при обнулении');
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -48,10 +36,15 @@ export function AddIncomeForm() {
       toast.error('Выберите категорию и введите сумму');
       return;
     }
+    const parsedAmount = parseFloat(amount);
+    if (!(parsedAmount > 0)) {
+      toast.error('Сумма должна быть больше нуля');
+      return;
+    }
 
     try {
       await addIncome.mutateAsync({
-        amount: parseFloat(amount),
+        amount: parsedAmount,
         category_id: categoryId,
         currency,
         description: isStartingBalance ? 'Начальный баланс' : null,
@@ -63,13 +56,6 @@ export function AddIncomeForm() {
       toast.success(isStartingBalance ? 'Баланс сохранён' : 'Доход добавлен');
     } catch {
       toast.error('Не удалось добавить');
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && amount && categoryId) {
-      e.preventDefault();
-      handleSubmit(e);
     }
   };
 
@@ -101,34 +87,6 @@ export function AddIncomeForm() {
             </span>
           </button>
           <QuickCategoryAdd type="income" />
-          
-          {incomes.length > 0 && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <button
-                  type="button"
-                  className="text-[10px] md:text-xs p-1 md:px-2 md:py-1 rounded-full transition-colors flex items-center gap-0.5 md:gap-1 bg-destructive/10 text-destructive hover:bg-destructive/20"
-                  title="Обнулить все доходы для нового распределения"
-                >
-                  <RotateCcw className="w-3 h-3" />
-                </button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Начать новый период?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Все текущие доходы будут обнулены. Вы сможете ввести новую сумму для нового распределения по категориям.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Отмена</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleReset}>
-                    Обнулить
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
         </div>
       </CardHeader>
       <CardContent className="p-3 md:p-4 pt-2">
@@ -180,12 +138,13 @@ export function AddIncomeForm() {
           <div className="relative flex-1 min-w-0">
             <Input
               type="number"
+              inputMode="decimal"
               placeholder="0"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              onKeyDown={handleKeyDown}
               min="0"
               step="0.01"
+              aria-label="Сумма дохода"
               className="h-9 md:h-10 pr-8 text-sm"
             />
             <span className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs md:text-sm">
@@ -199,6 +158,7 @@ export function AddIncomeForm() {
             size="icon"
             className="h-9 w-9 md:h-10 md:w-10 shrink-0 gradient-primary"
             disabled={addIncome.isPending || !amount || !categoryId}
+            aria-label="Добавить доход"
           >
             {addIncome.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin" />

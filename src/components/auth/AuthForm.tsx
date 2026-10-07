@@ -37,7 +37,7 @@ export function AuthForm() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await signUp(email, password);
+    const { error, needsEmailConfirmation } = await signUp(email, password);
     setLoading(false);
     
     if (error) {
@@ -45,6 +45,11 @@ export function AuthForm() {
         title: 'Ошибка регистрации',
         description: error.message,
         variant: 'destructive',
+      });
+    } else if (needsEmailConfirmation) {
+      toast({
+        title: 'Подтвердите email',
+        description: `Мы отправили письмо на ${email}. Перейдите по ссылке из письма, чтобы войти.`,
       });
     } else {
       toast({

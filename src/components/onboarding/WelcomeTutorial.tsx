@@ -71,6 +71,16 @@ const TUTORIAL_STEPS: TutorialStep[] = [
 const SUGGESTED_INCOME_CATEGORIES = ['Зарплата', 'Аванс', 'Подработка', 'Инвестиции'];
 const SUGGESTED_EXPENSE_CATEGORIES = ['Продукты', 'Транспорт', 'Жильё', 'Развлечения', 'Накопления', 'Здоровье'];
 
+// Sensible default emoji for the suggested categories so they don't all look identical.
+const EXPENSE_ICON_BY_NAME: Record<string, string> = {
+  'Продукты': '🛒',
+  'Транспорт': '🚗',
+  'Жильё': '🏠',
+  'Развлечения': '🎮',
+  'Накопления': '💰',
+  'Здоровье': '🏥',
+};
+
 interface WelcomeTutorialProps {
   onComplete: () => void;
 }
@@ -114,8 +124,10 @@ export function WelcomeTutorial({ onComplete }: WelcomeTutorialProps) {
     setExpenseCategories(expenseCategories.filter(c => c !== name));
   };
 
-  const saveCategories = async () => {
-    if (!user) return;
+  /** Returns true on success; the tutorial must not be marked complete otherwise. */
+  const saveCategories = async (): Promise<boolean> => {
+    if (!user) return false;
+    if (incomeCategories.length === 0 && expenseCategories.length === 0) return true;
     
     setIsSaving(true);
     try {
@@ -123,7 +135,7 @@ export function WelcomeTutorial({ onComplete }: WelcomeTutorialProps) {
       for (const name of incomeCategories) {
         await addIncomeCategory.mutateAsync({
           name,
-          icon: 'wallet',
+          icon: '💰',
           color: '#10B981',
         });
       }
@@ -132,7 +144,7 @@ export function WelcomeTutorial({ onComplete }: WelcomeTutorialProps) {
       for (const name of expenseCategories) {
         await addExpenseCategory.mutateAsync({
           name,
-          icon: '💰',
+          icon: EXPENSE_ICON_BY_NAME[name] ?? '🛒',
           color: '#6B7280',
           allocation_type: 'percentage',
           allocation_value: 0,
@@ -143,12 +155,14 @@ export function WelcomeTutorial({ onComplete }: WelcomeTutorialProps) {
         title: 'Категории созданы!',
         description: `Добавлено ${incomeCategories.length} источников дохода и ${expenseCategories.length} категорий расходов`,
       });
-    } catch (error) {
+      return true;
+    } catch {
       toast({
         title: 'Ошибка',
-        description: 'Не удалось сохранить категории',
+        description: 'Не удалось сохранить категории. Попробуйте ещё раз.',
         variant: 'destructive',
       });
+      return false;
     } finally {
       setIsSaving(false);
     }
@@ -156,11 +170,7 @@ export function WelcomeTutorial({ onComplete }: WelcomeTutorialProps) {
 
   const handleNext = async () => {
     if (isLastStep) {
-      // Save categories before completing
-      if (incomeCategories.length > 0 || expenseCategories.length > 0) {
-        await saveCategories();
-      }
-      onComplete();
+      if (await saveCategories()) onComplete();
     } else {
       setCurrentStep((prev) => prev + 1);
     }
@@ -173,11 +183,7 @@ export function WelcomeTutorial({ onComplete }: WelcomeTutorialProps) {
   };
 
   const handleSkip = async () => {
-    // Save categories if any were added
-    if (incomeCategories.length > 0 || expenseCategories.length > 0) {
-      await saveCategories();
-    }
-    onComplete();
+    if (await saveCategories()) onComplete();
   };
 
   const canProceed = () => {
@@ -375,18 +381,22 @@ export function WelcomeTutorial({ onComplete }: WelcomeTutorialProps) {
             </div>
           )}
 
-          {/* Step indicator */}
+          {/* Step indicator — only completed steps are clickable, so required
+              category steps can't be skipped by jumping ahead. */}
           <div className="flex justify-center gap-2 mb-6">
-            {TUTORIAL_STEPS.map((_, index) => (
+            {TUTORIAL_STEPS.map((s, index) => (
               <button
                 key={index}
+                type="button"
+                aria-label={`Шаг ${index + 1}: ${s.title}`}
+                disabled={index > currentStep}
                 onClick={() => setCurrentStep(index)}
-                className={`w-2 h-2 rounded-full transition-all ${
+                className={`w-2 h-2 rounded-full transition-all disabled:cursor-default ${
                   index === currentStep
                     ? 'w-6 bg-primary'
                     : index < currentStep
                     ? 'bg-primary/50'
-                    : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                    : 'bg-muted-foreground/30'
                 }`}
               />
             ))}

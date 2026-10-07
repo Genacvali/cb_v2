@@ -271,25 +271,28 @@ export function useApplyTemplate() {
     mutationFn: async (template: CategoryTemplate) => {
       if (!user) throw new Error('Not authenticated');
       
-      // Add income categories
-      for (const cat of template.incomeCategories) {
-        await supabase
+      // Add income categories (single batched insert)
+      if (template.incomeCategories.length > 0) {
+        const { error } = await supabase
           .from('income_categories')
-          .insert({ ...cat, user_id: user.id });
+          .insert(template.incomeCategories.map(cat => ({ ...cat, user_id: user.id })));
+        if (error) throw error;
       }
       
-      // Add expense categories
-      for (const cat of template.expenseCategories) {
-        await supabase
+      // Add expense categories (single batched insert)
+      if (template.expenseCategories.length > 0) {
+        const { error } = await supabase
           .from('expense_categories')
-          .insert({ ...cat, user_id: user.id });
+          .insert(template.expenseCategories.map(cat => ({ ...cat, user_id: user.id })));
+        if (error) throw error;
       }
       
       // Mark onboarding as complete
-      await supabase
+      const { error: profileError } = await supabase
         .from('profiles')
         .update({ onboarding_completed: true })
         .eq('user_id', user.id);
+      if (profileError) throw profileError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['income-categories'] });

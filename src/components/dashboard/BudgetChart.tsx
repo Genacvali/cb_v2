@@ -1,14 +1,33 @@
 import { useExpenseCategories, useIncomes } from '@/hooks/useBudget';
 import { useAllAllocations } from '@/hooks/useAllocations';
+import { useFormatMoney } from '@/hooks/useCurrencies';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, Sector } from 'recharts';
+import type { PieSectorDataItem } from 'recharts/types/polar/Pie';
 import { useState, useCallback } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-const renderActiveShape = (props: any, isMobile: boolean) => {
+interface ChartDatum {
+  name: string;
+  value: number;
+  color: string;
+  percent: number;
+}
+
+type ActiveShapeProps = PieSectorDataItem & {
+  payload?: ChartDatum;
+  percent?: number;
+  value?: number;
+};
+
+const renderActiveShape = (
+  props: ActiveShapeProps,
+  isMobile: boolean,
+  money: (amount: number) => string,
+) => {
   const {
-    cx, cy, innerRadius, outerRadius, startAngle, endAngle,
-    fill, payload, percent, value
+    cx = 0, cy = 0, innerRadius = 0, outerRadius = 0, startAngle, endAngle,
+    fill, payload, percent = 0, value = 0,
   } = props;
 
   const fontSize = isMobile ? 11 : 14;
@@ -17,10 +36,10 @@ const renderActiveShape = (props: any, isMobile: boolean) => {
   return (
     <g>
       <text x={cx} y={cy - 8} textAnchor="middle" fill="hsl(var(--foreground))" style={{ fontSize, fontWeight: 500 }}>
-        {payload.name}
+        {payload?.name}
       </text>
       <text x={cx} y={cy + 10} textAnchor="middle" fill="hsl(var(--muted-foreground))" style={{ fontSize: smallFontSize }}>
-        {value.toLocaleString('ru-RU')} ₽
+        {money(value)}
       </text>
       <text x={cx} y={cy + 26} textAnchor="middle" fill="hsl(var(--muted-foreground))" style={{ fontSize: smallFontSize }}>
         {(percent * 100).toFixed(1)}%
@@ -53,6 +72,7 @@ export function BudgetChart() {
   const { data: expenseCategories = [] } = useExpenseCategories();
   const { data: incomes = [] } = useIncomes();
   const { data: allAllocations = [] } = useAllAllocations();
+  const { format: money } = useFormatMoney();
   const [activeIndex, setActiveIndex] = useState<number | undefined>(undefined);
   const isMobile = useIsMobile();
 
@@ -82,7 +102,7 @@ export function BudgetChart() {
     return totalAllocated;
   };
 
-  const chartData = expenseCategories.map((cat) => {
+  const chartData: ChartDatum[] = expenseCategories.map((cat) => {
     const amount = getCategoryAllocation(cat.id);
     
     return {
@@ -93,7 +113,7 @@ export function BudgetChart() {
     };
   }).filter(d => d.value > 0);
 
-  const onPieEnter = useCallback((_: any, index: number) => {
+  const onPieEnter = useCallback((_: unknown, index: number) => {
     setActiveIndex(index);
   }, []);
 
@@ -128,7 +148,7 @@ export function BudgetChart() {
           <PieChart>
             <Pie
               activeIndex={activeIndex}
-              activeShape={(props: any) => renderActiveShape(props, isMobile)}
+              activeShape={(props: ActiveShapeProps) => renderActiveShape(props, isMobile, money)}
               data={chartData}
               cx="50%"
               cy="45%"
@@ -155,7 +175,7 @@ export function BudgetChart() {
               ))}
             </Pie>
             <Tooltip 
-              formatter={(value: number) => [`${value.toLocaleString('ru-RU')} ₽`, 'Сумма']}
+              formatter={(value: number) => [money(value), 'Сумма']}
               contentStyle={{
                 backgroundColor: 'hsl(var(--card))',
                 border: '1px solid hsl(var(--border))',
@@ -165,11 +185,14 @@ export function BudgetChart() {
               }}
             />
             <Legend 
-              formatter={(value, entry: any) => (
-                <span style={{ fontSize: isMobile ? 11 : 14 }}>
-                  {isMobile && value.length > 10 ? value.substring(0, 10) + '...' : value} ({(entry.payload.percent * 100).toFixed(0)}%)
-                </span>
-              )}
+              formatter={(value: string, entry) => {
+                const percent = (entry.payload as unknown as ChartDatum | undefined)?.percent ?? 0;
+                return (
+                  <span style={{ fontSize: isMobile ? 11 : 14 }}>
+                    {isMobile && value.length > 10 ? value.substring(0, 10) + '...' : value} ({(percent * 100).toFixed(0)}%)
+                  </span>
+                );
+              }}
               wrapperStyle={{ paddingTop: isMobile ? '10px' : '20px' }}
               iconSize={isMobile ? 8 : 10}
             />

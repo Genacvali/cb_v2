@@ -24,7 +24,9 @@ export function IncomeHistory() {
   const { data: currencies = [] } = useCurrencies();
   const updateIncome = useUpdateIncome();
   const queryClient = useQueryClient();
-  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('current');
+  // Default to "all" so the list matches the totals in StatsCards, which
+  // aggregate every income since the last reset rather than the calendar month.
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('all');
   const [isExpanded, setIsExpanded] = useState(false);
   
   // Edit state
@@ -134,6 +136,10 @@ export function IncomeHistory() {
   const handleEditSave = async () => {
     if (!editingIncome || !editAmount || !editCategoryId) {
       toast.error('Заполните все поля');
+      return;
+    }
+    if (!(parseFloat(editAmount) > 0)) {
+      toast.error('Сумма должна быть больше нуля');
       return;
     }
 
@@ -262,8 +268,9 @@ export function IncomeHistory() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-6 w-6 md:h-7 md:w-7 opacity-0 group-hover:opacity-100 md:transition-opacity text-muted-foreground hover:text-foreground"
+                              className="h-6 w-6 md:h-7 md:w-7 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
                               onClick={() => handleEditClick(income)}
+                              aria-label="Редактировать запись"
                             >
                               <Pencil className="w-3 h-3" />
                             </Button>
@@ -273,7 +280,8 @@ export function IncomeHistory() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-6 w-6 md:h-7 md:w-7 opacity-0 group-hover:opacity-100 md:transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  className="h-6 w-6 md:h-7 md:w-7 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  aria-label="Удалить запись"
                                 >
                                   <Trash2 className="w-3 h-3" />
                                 </Button>
@@ -352,6 +360,7 @@ export function IncomeHistory() {
                 <div className="relative flex-1">
                   <Input
                     type="number"
+                    inputMode="decimal"
                     value={editAmount}
                     onChange={(e) => setEditAmount(e.target.value)}
                     min="0"

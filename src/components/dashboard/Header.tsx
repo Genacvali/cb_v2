@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme, THEME_OPTIONS } from '@/hooks/useTheme';
+import { useIncomes, useResetIncomes } from '@/hooks/useBudget';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { 
@@ -12,15 +13,34 @@ import {
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { LogOut, User, Palette, Sun, Bot } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { LogOut, User, Palette, Sun, Bot, ArrowLeftRight, RotateCcw } from 'lucide-react';
+import { toast } from 'sonner';
 import crystalLogo from '@/assets/crystal-logo.png';
 import { TelegramLink } from './TelegramLink';
 import { CategoryManager } from './CategoryManager';
+import { CurrencyConverter } from './CurrencyConverter';
+import { useDisplayCurrency } from '@/hooks/useExchangeRates';
+import { cn } from '@/lib/utils';
 
 export function Header() {
   const { user, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { displayCurrency } = useDisplayCurrency();
+  const { data: incomes = [] } = useIncomes();
+  const resetIncomes = useResetIncomes();
   const [showTelegramDialog, setShowTelegramDialog] = useState(false);
+  const [showConverter, setShowConverter] = useState(false);
+  const [resetOpen, setResetOpen] = useState(false);
+
+  const handleReset = async () => {
+    try {
+      await resetIncomes.mutateAsync();
+      toast.success('Доходы обнулены. Введите новую сумму для распределения.');
+    } catch {
+      toast.error('Ошибка при обнулении');
+    }
+  };
 
   const initials = user?.email?.substring(0, 2).toUpperCase() || 'U';
   const currentTheme = THEME_OPTIONS.find(t => t.value === theme);
@@ -42,6 +62,22 @@ export function Header() {
             showLabel={false}
             triggerClassName="h-8 w-8 md:h-10 md:w-10 p-0 justify-center"
           />
+          {/* Currency converter */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn('relative h-8 w-8 md:h-10 md:w-10', displayCurrency && 'text-primary')}
+            onClick={() => setShowConverter(true)}
+            aria-label="Конвертер валют"
+            title="Конвертер валют"
+          >
+            <ArrowLeftRight className="w-5 h-5" />
+            {displayCurrency && (
+              <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 text-[9px] font-semibold leading-none">
+                {displayCurrency}
+              </span>
+            )}
+          </Button>
           {/* Theme Switcher */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -92,6 +128,20 @@ export function Header() {
                 <Bot className="w-4 h-4" />
                 Telegram бот
               </DropdownMenuItem>
+              {incomes.length > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="flex items-center gap-2 text-destructive focus:text-destructive"
+                    onSelect={() => {
+                      window.setTimeout(() => setResetOpen(true), 0);
+                    }}
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    Начать новый период
+                  </DropdownMenuItem>
+                </>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem 
                 className="flex items-center gap-2 text-destructive focus:text-destructive"
@@ -104,6 +154,25 @@ export function Header() {
           </DropdownMenu>
         </div>
       </div>
+
+      <CurrencyConverter open={showConverter} onOpenChange={setShowConverter} />
+
+      <AlertDialog open={resetOpen} onOpenChange={setResetOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Начать новый период?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Все текущие доходы будут обнулены. Вы сможете ввести новую сумму для нового распределения по категориям.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Отмена</AlertDialogCancel>
+            <AlertDialogAction onClick={handleReset}>
+              Обнулить
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Telegram Link Dialog */}
       <Dialog open={showTelegramDialog} onOpenChange={setShowTelegramDialog}>

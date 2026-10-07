@@ -8,6 +8,7 @@ import {
   useUpdateIncomeCategory
 } from '@/hooks/useBudget';
 import { useAllAllocations } from '@/hooks/useAllocations';
+import { useFormatMoney } from '@/hooks/useCurrencies';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -60,6 +61,7 @@ export function CategoryManager({
   const { data: incomeCategories = [] } = useIncomeCategories();
   const { data: expenseCategories = [] } = useExpenseCategories();
   const { data: allAllocations = [] } = useAllAllocations();
+  const { format: money } = useFormatMoney();
   const deleteIncomeCategory = useDeleteIncomeCategory();
   const deleteExpenseCategory = useDeleteExpenseCategory();
   const addIncomeCategory = useAddIncomeCategory();
@@ -154,7 +156,7 @@ export function CategoryManager({
       const sourceName = a.income_category?.name || 'Неизвестно';
       const value = a.allocation_type === 'percentage' 
         ? `${a.allocation_value}%` 
-        : `${a.allocation_value.toLocaleString('ru-RU')} ₽`;
+        : money(a.allocation_value);
       return { sourceName, value };
     });
   };
