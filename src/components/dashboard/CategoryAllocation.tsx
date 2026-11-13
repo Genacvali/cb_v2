@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
+import { renderCategoriesImage } from '@/lib/exportCategoriesImage';
 import { useExpenseCategories, useIncomes, useIncomeCategories, useDeleteExpenseCategory } from '@/hooks/useBudget';
-import { useAllAllocations } from '@/hooks/useAllocations';
+import { useAllAllocations, useDeleteAllocations } from '@/hooks/useAllocations';
+import { getAdjustmentIds } from '@/lib/allocations';
 import { useDisplayMoney } from '@/hooks/useExchangeRates';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +13,7 @@ import { ExpenseCategoryForm } from './ExpenseCategoryForm';
 import { ExpenseCategory } from '@/types/budget';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus } from 'lucide-react';
+import { Copy, Loader2, Plus } from 'lucide-react';
 import { DistributeRemainingDialog } from './DistributeRemainingDialog';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -25,6 +27,7 @@ export function CategoryAllocation() {
     money, isConverted, displayCurrency, defaultCurrency, rate, rateDate, ratesLoading, resetDisplayCurrency,
   } = useDisplayMoney();
   const deleteExpenseCategory = useDeleteExpenseCategory();
+  const deleteAllocations = useDeleteAllocations();
 
   const [editingCategory, setEditingCategory] = useState<ExpenseCategory | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -32,6 +35,13 @@ export function CategoryAllocation() {
   const [categoryToDelete, setCategoryToDelete] = useState<ExpenseCategory | null>(null);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [distributeDialogOpen, setDistributeDialogOpen] = useState(false);
+  const [resetAdjustmentsOpen, setResetAdjustmentsOpen] = useState(false);
+  const [copyingImage, setCopyingImage] = useState(false);
+
+  const adjustmentIds = useMemo(() => getAdjustmentIds(allAllocations), [allAllocations]);
+  const adjustments = allAllocations.filter(a => adjustmentIds.has(a.id));
+  const adjustmentsTotal = adjustments.reduce((sum, a) => sum + Number(a.allocation_value), 0);
+  const adjustedCategoryCount = new Set(adjustments.map(a => a.expense_category_id)).size;
 
   // ── Income aggregation ────────────────────────────────────────────────────
   const incomeByCategory = incomes.reduce((acc, inc) => {
@@ -57,6 +67,7 @@ export function CategoryAllocation() {
     const cats = allAllocations.filter(a => a.expense_category_id === categoryId);
     return cats.reduce((sum, a) => {
       const src = incomeByCategory[a.income_category_id] || 0;
+      if (src <= 0) return sum;
       return sum + (a.allocation_type === 'percentage'
         ? src * a.allocation_value / 100
         : a.allocation_value);
@@ -92,10 +103,80 @@ export function CategoryAllocation() {
     setEditingCategory(null);
   };
 
+  const handleResetAdjustments = async () => {
+    try {
+      await deleteAllocations.mutateAsync([...adjustmentIds]);
+      toast.success('Выравнивание сброшено');
+    } catch {
+      toast.error('Ошибка при сбросе');
+    }
+  };
+
+  const handleCopyImage = async () => {
+    if (copyingImage || expenseCategories.length === 0) return;
+    setCopyingImage(true);
+    const note = overspendTotal > 0
+      ? `Перерасход: ${money(Math.round(overspendTotal))}`
+      : remainingTotal > 0
+        ? `Остаток: ${money(Math.round(remainingTotal))}`
+        : undefined;
+    const png = renderCategoriesImage({
+      title: 'Категории расходов',
+      badge: `${allocationPercent}%`,
+      note,
+      rows: expenseCategories.map(cat => {
+        const own = allAllocations.filter(a => a.expense_category_id === cat.id);
+        const base = own.filter(a => !adjustmentIds.has(a.id));
+        const topUp = own
+          .filter(a => adjustmentIds.has(a.id))
+          .reduce((sum, a) => sum + Number(a.allocation_value), 0);
+        const parts = base.slice(0, 2).map(a => (
+          `${a.income_category?.name ?? 'Источник'}: ${a.allocation_type === 'percentage'
+            ? `${Math.round(a.allocation_value)}%`
+            : money(Math.round(a.allocation_value))}`
+        ));
+        if (base.length > 2) parts.push(`+${base.length - 2}`);
+        if (topUp > 0) parts.push(`доплата ${money(Math.round(topUp))}`);
+        return {
+          icon: cat.icon,
+          name: cat.name,
+          detail: parts.join(' • ') || 'Источник не задан',
+          amount: money(Math.round(getCategoryPlannedTotal(cat.id))),
+          dimAmount: own.length === 0,
+        };
+      }),
+    });
+    try {
+      await navigator.clipboard.write([
+        new ClipboardItem({ 'image/png': png }),
+      ]);
+      toast.success('Картинка скопирована — вставьте её в чат');
+    } catch {
+      try {
+        const blob = await png;
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'kategorii-rashodov.png';
+        link.click();
+        URL.revokeObjectURL(url);
+        toast.message('Браузер не дал скопировать — картинка скачана');
+      } catch {
+        toast.error('Не удалось сделать картинку');
+      }
+    } finally {
+      setCopyingImage(false);
+    }
+  };
+
   const renderCategoryContent = (cat: ExpenseCategory) => {
-    const categoryAllocations = allAllocations.filter(a => a.expense_category_id === cat.id);
+    const ownAllocations = allAllocations.filter(a => a.expense_category_id === cat.id);
+    const categoryAllocations = ownAllocations.filter(a => !adjustmentIds.has(a.id));
+    const topUp = ownAllocations
+      .filter(a => adjustmentIds.has(a.id))
+      .reduce((sum, a) => sum + Number(a.allocation_value), 0);
     const plannedTotal = getCategoryPlannedTotal(cat.id);
-    const hasAllocations = categoryAllocations.length > 0;
+    const hasAllocations = ownAllocations.length > 0;
     return (
       <button
         type="button"
@@ -121,6 +202,11 @@ export function CategoryAllocation() {
                     </span>
                   ))}
                   {categoryAllocations.length > 2 && ` • +${categoryAllocations.length - 2}`}
+                  {topUp > 0 && (
+                    <span className="text-primary">
+                      {categoryAllocations.length > 0 && ' • '}доплата {money(Math.round(topUp))}
+                    </span>
+                  )}
                 </>
               ) : (
                 <span className="italic">Источник не задан</span>
@@ -172,6 +258,27 @@ export function CategoryAllocation() {
               {overspendTotal > 0 ? 'Снять перерасход' : 'Распределить'}
             </Button>
           )}
+          {adjustments.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 md:h-8 px-2 text-xs whitespace-nowrap text-muted-foreground hover:text-foreground"
+              onClick={() => setResetAdjustmentsOpen(true)}
+            >
+              Сбросить<span className="hidden sm:inline">&nbsp;выравнивание</span>
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 md:h-8 px-2 text-muted-foreground hover:text-foreground"
+            onClick={handleCopyImage}
+            disabled={copyingImage || expenseCategories.length === 0}
+            aria-label="Скопировать категории картинкой"
+            title="Скопировать картинкой"
+          >
+            {copyingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Copy className="w-4 h-4" />}
+          </Button>
           {/* ── Add category ── */}
           <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
             <DialogTrigger asChild>
@@ -242,6 +349,22 @@ export function CategoryAllocation() {
       allAllocations={allAllocations}
       incomeByCategory={incomeByCategory}
     />
+
+    <AlertDialog open={resetAdjustmentsOpen} onOpenChange={setResetAdjustmentsOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Сбросить выравнивание?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Уберём доплаты из «Распределить» в {adjustedCategoryCount} категориях на {money(Math.round(adjustmentsTotal))}.
+            Основные проценты и суммы категорий останутся как есть.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Отмена</AlertDialogCancel>
+          <AlertDialogAction onClick={handleResetAdjustments}>Сбросить</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
 
     {/* Delete confirmation */}
     <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

@@ -96,6 +96,25 @@ export function useDeleteAllocation() {
   });
 }
 
+export function useDeleteAllocations() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      if (ids.length === 0) return;
+      const { error } = await supabase
+        .from('expense_category_allocations')
+        .delete()
+        .in('id', ids);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expense-category-allocations'] });
+      queryClient.invalidateQueries({ queryKey: ['all-allocations'] });
+    },
+  });
+}
+
 export function useBulkSaveAllocations() {
   const queryClient = useQueryClient();
   const { user } = useAuth();

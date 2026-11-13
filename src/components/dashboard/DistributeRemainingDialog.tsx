@@ -12,6 +12,7 @@ import { CategoryIcon } from '@/components/icons/CategoryIcon';
 import { ExpenseCategory, ExpenseCategoryAllocation, IncomeCategory } from '@/types/budget';
 import { useAddAllocation, useDeleteAllocation, useUpdateAllocation } from '@/hooks/useAllocations';
 import { useFormatMoney } from '@/hooks/useCurrencies';
+import { getAdjustmentIds } from '@/lib/allocations';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Wand2 } from 'lucide-react';
@@ -207,13 +208,15 @@ export function DistributeRemainingDialog({
       : Math.min(allocation.allocation_value, src);
   };
 
+  const adjustmentIds = useMemo(() => getAdjustmentIds(allAllocations), [allAllocations]);
+
   const applyCut = async (expenseCategoryId: string, cut: number) => {
     let left = cut;
     const rows = allAllocations
       .filter(a => a.expense_category_id === expenseCategoryId)
-      .map(a => ({ allocation: a, contrib: contribution(a) }))
+      .map(a => ({ allocation: a, contrib: contribution(a), isTopUp: adjustmentIds.has(a.id) }))
       .filter(row => row.contrib > 0)
-      .sort((a, b) => b.contrib - a.contrib);
+      .sort((a, b) => Number(b.isTopUp) - Number(a.isTopUp) || b.contrib - a.contrib);
 
     for (const { allocation, contrib } of rows) {
       if (left <= 0.5) break;
@@ -250,12 +253,24 @@ export function DistributeRemainingDialog({
         toast.success('Перерасход снят');
       } else {
         for (const [catId, amount] of entries) {
-          await addAllocation.mutateAsync({
-            expense_category_id: catId,
-            income_category_id: selectedIncomeId,
-            allocation_type: 'fixed',
-            allocation_value: amount,
-          });
+          const topUp = allAllocations.find(a =>
+            adjustmentIds.has(a.id)
+            && a.expense_category_id === catId
+            && a.income_category_id === selectedIncomeId,
+          );
+          if (topUp) {
+            await updateAllocation.mutateAsync({
+              id: topUp.id,
+              allocation_value: Number(topUp.allocation_value) + amount,
+            });
+          } else {
+            await addAllocation.mutateAsync({
+              expense_category_id: catId,
+              income_category_id: selectedIncomeId,
+              allocation_type: 'fixed',
+              allocation_value: amount,
+            });
+          }
         }
         toast.success('Остаток распределён');
       }
