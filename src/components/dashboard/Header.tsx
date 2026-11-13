@@ -81,7 +81,13 @@ export function Header() {
           {/* Theme Switcher */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 md:h-10 md:w-10">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 md:h-10 md:w-10"
+                aria-label="Тема оформления"
+                title="Тема оформления"
+              >
                 {currentTheme ? <currentTheme.Icon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
               </Button>
             </DropdownMenuTrigger>
@@ -107,7 +113,12 @@ export function Header() {
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 md:h-10 md:w-10 rounded-full">
+              <Button
+                variant="ghost"
+                className="relative h-8 w-8 md:h-10 md:w-10 rounded-full"
+                aria-label="Профиль"
+                title="Профиль"
+              >
                 <Avatar className="h-8 w-8 md:h-10 md:w-10">
                   <AvatarFallback className="gradient-primary text-white font-medium text-sm">
                     {initials}

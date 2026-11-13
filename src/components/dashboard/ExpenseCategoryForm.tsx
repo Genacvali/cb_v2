@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useIncomeCategories, useAddExpenseCategory, useUpdateExpenseCategory, useIncomes } from '@/hooks/useBudget';
+import { useState, useEffect } from 'react';
+import { useIncomeCategories, useAddExpenseCategory, useUpdateExpenseCategory } from '@/hooks/useBudget';
 import { useExpenseCategoryAllocations, useBulkSaveAllocations } from '@/hooks/useAllocations';
-import { useCurrencies, getCurrencySymbol } from '@/hooks/useCurrencies';
+import { useFormatMoney } from '@/hooks/useCurrencies';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,6 +23,7 @@ interface AllocationFormData {
   income_category_id: string;
   allocation_type: 'percentage' | 'fixed';
   allocation_value: number;
+  is_adjustment?: boolean;
 }
 
 interface Props {
@@ -30,30 +31,17 @@ interface Props {
   isEditing?: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  onDelete?: () => void;
 }
 
-export function ExpenseCategoryForm({ category, isEditing = false, onClose, onSuccess }: Props) {
+export function ExpenseCategoryForm({ category, isEditing = false, onClose, onSuccess, onDelete }: Props) {
   const { data: incomeCategories = [] } = useIncomeCategories();
-  const { data: incomes = [] } = useIncomes();
   const { data: existingAllocations = [] } = useExpenseCategoryAllocations(category?.id);
-  const { data: currencies = [] } = useCurrencies();
+  // Incomes are summed in the profile currency, so fixed amounts are too
+  const { symbol: currencySymbol } = useFormatMoney();
   const addCategory = useAddExpenseCategory();
   const updateCategory = useUpdateExpenseCategory();
   const bulkSaveAllocations = useBulkSaveAllocations();
-
-  // Build a map of income category -> currencies used in that category's incomes
-  const incomeCategoryCurrencies = useMemo(() => {
-    const map: Record<string, Set<string>> = {};
-    incomes.forEach(income => {
-      if (income.category_id) {
-        if (!map[income.category_id]) {
-          map[income.category_id] = new Set();
-        }
-        map[income.category_id].add(income.currency || 'RUB');
-      }
-    });
-    return map;
-  }, [incomes]);
 
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('🛒');
@@ -80,6 +68,7 @@ export function ExpenseCategoryForm({ category, isEditing = false, onClose, onSu
         income_category_id: a.income_category_id,
         allocation_type: a.allocation_type,
         allocation_value: a.allocation_value,
+        is_adjustment: a.is_adjustment,
       })));
     }
   }, [existingAllocations, isEditing]);
@@ -117,16 +106,6 @@ export function ExpenseCategoryForm({ category, isEditing = false, onClose, onSu
 
   const getIncomeCategoryName = (id: string) => {
     return incomeCategories.find(c => c.id === id)?.name || 'Не выбрано';
-  };
-
-  // Get the currency for a specific income category based on actual incomes
-  const getIncomeCategoryCurrency = (categoryId: string): string => {
-    const currencySet = incomeCategoryCurrencies[categoryId];
-    if (currencySet && currencySet.size > 0) {
-      // Return the first currency (most incomes use single currency)
-      return Array.from(currencySet)[0];
-    }
-    return 'RUB'; // Default
   };
 
   const validateAllocations = (): string | null => {
@@ -314,7 +293,7 @@ export function ExpenseCategoryForm({ category, isEditing = false, onClose, onSu
                         handleAllocationChange(index, 'income_category_id', value)
                       }
                     >
-                      <SelectTrigger className="bg-secondary/50 h-9">
+                      <SelectTrigger className="bg-secondary/50 h-9 [&>span]:line-clamp-none">
                         <SelectValue placeholder="Выберите источник">
                           {getIncomeCategoryName(allocation.income_category_id)}
                         </SelectValue>
@@ -366,9 +345,7 @@ export function ExpenseCategoryForm({ category, isEditing = false, onClose, onSu
                           className="bg-secondary/50 pr-8 h-9"
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                          {allocation.allocation_type === 'percentage' 
-                            ? '%' 
-                            : getCurrencySymbol(getIncomeCategoryCurrency(allocation.income_category_id), currencies)}
+                          {allocation.allocation_type === 'percentage' ? '%' : currencySymbol}
                         </span>
                       </div>
                     </div>
@@ -380,14 +357,33 @@ export function ExpenseCategoryForm({ category, isEditing = false, onClose, onSu
         </div>
 
       {/* Actions */}
-      <div className="flex gap-2 pt-2">
-        <Button onClick={handleSave} className="flex-1 gradient-primary" disabled={isSaving || !name.trim()}>
-          {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-          {isEditing ? 'Сохранить' : 'Создать'}
-        </Button>
-        <Button variant="outline" onClick={onClose} disabled={isSaving}>
-          Отмена
-        </Button>
+      <div className="space-y-3 pt-4 border-t border-border/60">
+        <div className="grid grid-cols-2 gap-2">
+          <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
+            Отмена
+          </Button>
+          <Button
+            type="button"
+            onClick={handleSave}
+            className="gradient-primary"
+            disabled={isSaving || !name.trim()}
+          >
+            {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
+            {isEditing ? 'Сохранить' : 'Создать'}
+          </Button>
+        </div>
+        {onDelete && (
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+            onClick={onDelete}
+            disabled={isSaving}
+          >
+            <Trash2 className="w-4 h-4" />
+            Удалить категорию
+          </Button>
+        )}
       </div>
     </div>
   );

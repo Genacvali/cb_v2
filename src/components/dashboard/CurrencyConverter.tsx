@@ -31,7 +31,7 @@ const formatRate = (n: number) => {
 export function CurrencyConverter({ open, onOpenChange, initialAmount }: Props) {
   const { defaultCurrency, currencies } = useFormatMoney();
   const { displayCurrency, setDisplayCurrency } = useDisplayCurrency();
-  const { convert, rateOf, supportedCodes, date, source, isLoading, isError, isFetching, refetch } = useExchangeRates();
+  const { convert, rateOf, supportedCodes, date, source, isLoading, isError, isFetching, refetch } = useExchangeRates({ enabled: open });
 
   const [amount, setAmount] = useState('');
   const [from, setFrom] = useState(defaultCurrency);

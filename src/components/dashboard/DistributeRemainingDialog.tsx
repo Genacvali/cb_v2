@@ -12,7 +12,7 @@ import { CategoryIcon } from '@/components/icons/CategoryIcon';
 import { ExpenseCategory, ExpenseCategoryAllocation, IncomeCategory } from '@/types/budget';
 import { useAddAllocation, useDeleteAllocation, useUpdateAllocation } from '@/hooks/useAllocations';
 import { useFormatMoney } from '@/hooks/useCurrencies';
-import { getAdjustmentIds } from '@/lib/allocations';
+import { allocationContribution, getAdjustmentIds } from '@/lib/allocations';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Wand2 } from 'lucide-react';
@@ -54,13 +54,7 @@ export function DistributeRemainingDialog({
         const total = incomeByCategory[ic.id] || 0;
         const allocated = allAllocations
           .filter(a => a.income_category_id === ic.id)
-          .reduce((sum, a) => {
-            return sum + (
-              a.allocation_type === 'percentage'
-                ? total * a.allocation_value / 100
-                : Math.min(a.allocation_value, total)
-            );
-          }, 0);
+          .reduce((sum, a) => sum + allocationContribution(a, total), 0);
         return { ...ic, total, remaining: Math.max(total - allocated, 0) };
       })
       .filter(ic => ic.remaining > 0)
@@ -74,12 +68,7 @@ export function DistributeRemainingDialog({
       expenseCategories.map(cat => {
         const total = allAllocations
           .filter(a => a.expense_category_id === cat.id)
-          .reduce((sum, a) => {
-            const src = incomeByCategory[a.income_category_id] || 0;
-            return sum + (a.allocation_type === 'percentage'
-              ? src * a.allocation_value / 100
-              : Math.min(a.allocation_value, src));
-          }, 0);
+          .reduce((sum, a) => sum + allocationContribution(a, incomeByCategory[a.income_category_id] || 0), 0);
         return [cat.id, total];
       }),
     ),
@@ -201,12 +190,8 @@ export function DistributeRemainingDialog({
   const handleEven = () => split(targets, 'even');
   const handleProportional = () => split(targets, 'proportional');
 
-  const contribution = (allocation: ExpenseCategoryAllocation) => {
-    const src = incomeByCategory[allocation.income_category_id] || 0;
-    return allocation.allocation_type === 'percentage'
-      ? src * allocation.allocation_value / 100
-      : Math.min(allocation.allocation_value, src);
-  };
+  const contribution = (allocation: ExpenseCategoryAllocation) =>
+    allocationContribution(allocation, incomeByCategory[allocation.income_category_id] || 0);
 
   const adjustmentIds = useMemo(() => getAdjustmentIds(allAllocations), [allAllocations]);
 
@@ -269,6 +254,7 @@ export function DistributeRemainingDialog({
               income_category_id: selectedIncomeId,
               allocation_type: 'fixed',
               allocation_value: amount,
+              is_adjustment: true,
             });
           }
         }

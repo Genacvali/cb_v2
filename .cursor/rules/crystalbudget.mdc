@@ -1,0 +1,30 @@
+---
+description: CrystalBudget — общие правила продукта и работы агента
+alwaysApply: true
+---
+
+# CrystalBudget
+
+Русское приложение личного бюджета: Vite + React 18 + TS + Tailwind/shadcn + TanStack Query + Supabase.
+
+## UI и копирайт
+
+- Весь пользовательский текст — на русском.
+- Формулировки утвердительные, без контрастных «X, а не Y».
+- Деньги через `useDisplayMoney` / `useFormatMoney`; проценты — `formatPercent` из `@/lib/allocations` (десятые: `4,8%`).
+- Иконки категорий — эмодзи из `CATEGORY_EMOJI_OPTIONS`; рендер через `CategoryIcon`.
+
+## Данные и безопасность
+
+- Не нажимать в live-данных: Применить / Обнулить / Сбросить / Снять перерасход / удаление категорий.
+- Для проверки UI можно подставить доход только в React Query cache; после — `refetch` реальных данных.
+- Не читать и не печатать секреты из `.env`. `SUPABASE_SECRET_KEY` без префикса `VITE_`.
+- Не коммитить и не пушить без явной просьбы. Пароли GitHub не писать в репо и git config.
+
+## Локальный запуск
+
+Node часто нет в PATH — брать `/tmp/node-local/node/bin`. Dev-сервер: `npm run dev -- --host 127.0.0.1 --port 8080` с полными правами. Проверка: `npx tsc -p tsconfig.app.json --noEmit`, `npx vitest run`.
+
+## Миграции
+
+`is_adjustment` на аллокациях может ещё не быть в Supabase. Вставка с колонкой падает с PGRST204 — есть fallback без колонки. Напоминать прогнать `supabase/migrations/20261114010000_allocation_adjustment_flag.sql` в SQL Editor.

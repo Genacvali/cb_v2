@@ -79,6 +79,7 @@ export type Database = {
           expense_category_id: string
           id: string
           income_category_id: string
+          is_adjustment: boolean
           user_id: string
         }
         Insert: {
@@ -88,6 +89,7 @@ export type Database = {
           expense_category_id: string
           id?: string
           income_category_id: string
+          is_adjustment?: boolean
           user_id: string
         }
         Update: {
@@ -97,6 +99,7 @@ export type Database = {
           expense_category_id?: string
           id?: string
           income_category_id?: string
+          is_adjustment?: boolean
           user_id?: string
         }
         Relationships: [

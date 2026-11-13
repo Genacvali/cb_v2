@@ -70,13 +70,14 @@ async function fetchExchangeRates(): Promise<ExchangeRates> {
   throw lastError instanceof Error ? lastError : new Error('Не удалось загрузить курсы валют');
 }
 
-export function useExchangeRates() {
+export function useExchangeRates({ enabled = true }: { enabled?: boolean } = {}) {
   const query = useQuery({
     queryKey: ['exchange-rates', 'USD'],
     queryFn: fetchExchangeRates,
     staleTime: 1000 * 60 * 60 * 6, // rates update daily; 6h is plenty
     gcTime: 1000 * 60 * 60 * 24,
     retry: 1,
+    enabled,
   });
 
   const rates = query.data?.rates;
@@ -161,9 +162,8 @@ export function useDisplayCurrency() {
 export function useDisplayMoney() {
   const { format, defaultCurrency, currencies } = useFormatMoney();
   const { displayCurrency, setDisplayCurrency } = useDisplayCurrency();
-  const { convert, rateOf, date, isLoading, isError } = useExchangeRates();
-
   const target = displayCurrency && displayCurrency !== defaultCurrency ? displayCurrency : null;
+  const { convert, rateOf, date, isLoading, isError } = useExchangeRates({ enabled: !!target });
 
   const money = useCallback(
     (amount: number, currency?: string) => {

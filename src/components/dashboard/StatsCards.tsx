@@ -1,182 +1,162 @@
-import { useIncomes, useIncomeCategories } from '@/hooks/useBudget';
+import { useIncomeCategories } from '@/hooks/useBudget';
 import { useAllAllocations } from '@/hooks/useAllocations';
 import { useDisplayMoney } from '@/hooks/useExchangeRates';
+import { useIncomeTotals } from '@/hooks/useIncomeTotals';
+import { useFormatMoney } from '@/hooks/useCurrencies';
+import { allocationContribution } from '@/lib/allocations';
 import { Card, CardContent } from '@/components/ui/card';
 import { CategoryIcon } from '@/components/icons/CategoryIcon';
-import { TrendingUp } from 'lucide-react';
+import { Wallet } from 'lucide-react';
 import { useMemo } from 'react';
+import { cn } from '@/lib/utils';
 
 export function StatsCards() {
-  const { data: incomes = [] } = useIncomes();
+  const { incomes, incomeByCategory, totalIncome, missingRates, hasForeign, ratesLoading, baseCurrency } = useIncomeTotals();
   const { data: incomeCategories = [] } = useIncomeCategories();
   const { data: allAllocations = [] } = useAllAllocations();
   // Honours the dashboard "display currency" (converts via live rates when set)
   const { money } = useDisplayMoney();
+  const { format } = useFormatMoney();
 
-  // Group incomes by currency
-  const incomesByCurrency = useMemo(() => {
+  const foreignTotals = useMemo(() => {
     const groups: Record<string, number> = {};
     incomes.forEach(inc => {
-      const curr = inc.currency || 'RUB';
-      groups[curr] = (groups[curr] || 0) + Number(inc.amount);
+      const currency = inc.currency || baseCurrency;
+      if (currency === baseCurrency) return;
+      groups[currency] = (groups[currency] || 0) + Number(inc.amount);
     });
-    return groups;
-  }, [incomes]);
-
-  const totalIncome = incomes.reduce((sum, inc) => sum + Number(inc.amount), 0);
-
-  const incomeByCategory = useMemo(() => {
-    const groups: Record<string, number> = {};
-    incomes.forEach(inc => {
-      const catId = inc.category_id || 'uncategorized';
-      groups[catId] = (groups[catId] || 0) + Number(inc.amount);
-    });
-    return groups;
-  }, [incomes]);
-
-  const totalAllocatedAmount = useMemo(() => {
-    let totalAllocated = 0;
-    for (const allocation of allAllocations) {
-      const sourceIncome = incomeByCategory[allocation.income_category_id] || 0;
-      if (allocation.allocation_type === 'percentage') {
-        totalAllocated += sourceIncome * allocation.allocation_value / 100;
-      } else {
-        totalAllocated += Math.min(allocation.allocation_value, sourceIncome);
-      }
-    }
-    return totalAllocated;
-  }, [allAllocations, incomeByCategory]);
-
-  const totalAllocatedPercent = totalIncome > 0
-    ? Math.round(totalAllocatedAmount / totalIncome * 100)
-    : 0;
-
-  const incomeCategoryMap = useMemo(() => {
-    return new Map(incomeCategories.map(category => [category.id, category]));
-  }, [incomeCategories]);
-
-  const currencyByCategory = useMemo(() => {
-    const totals: Record<string, Record<string, number>> = {};
-    incomes.forEach(inc => {
-      const catId = inc.category_id || 'uncategorized';
-      const currency = inc.currency || 'RUB';
-      if (!totals[catId]) totals[catId] = {};
-      totals[catId][currency] = (totals[catId][currency] || 0) + Number(inc.amount);
-    });
-
-    const result: Record<string, string> = {};
-    Object.entries(totals).forEach(([catId, currencyTotals]) => {
-      const [topCurrency] = Object.entries(currencyTotals).sort((a, b) => b[1] - a[1])[0] || ['RUB'];
-      result[catId] = topCurrency;
-    });
-    return result;
-  }, [incomes]);
+    return Object.entries(groups).sort((a, b) => b[1] - a[1]);
+  }, [incomes, baseCurrency]);
 
   const allocatedByIncomeCategory = useMemo(() => {
     const totals: Record<string, number> = {};
     for (const allocation of allAllocations) {
       const catId = allocation.income_category_id || 'uncategorized';
-      const sourceIncome = incomeByCategory[catId] || 0;
-      const amount = allocation.allocation_type === 'percentage'
-        ? sourceIncome * allocation.allocation_value / 100
-        : Math.min(allocation.allocation_value, sourceIncome);
-      totals[catId] = (totals[catId] || 0) + amount;
+      totals[catId] = (totals[catId] || 0) + allocationContribution(allocation, incomeByCategory[catId] || 0);
     }
     return totals;
   }, [allAllocations, incomeByCategory]);
 
-  // Format multi-currency display - show all currencies as array for flexible rendering
-  const incomeEntries = useMemo(() => {
-    const entries = Object.entries(incomesByCurrency);
-    if (entries.length === 0) return [{ currency: 'RUB', amount: 0 }];
-    // Show all currencies, sorted by amount descending
-    return entries
-      .sort((a, b) => b[1] - a[1])
-      .map(([currency, amount]) => ({ currency, amount }));
-  }, [incomesByCurrency]);
+  const incomeCategoryMap = useMemo(
+    () => new Map(incomeCategories.map(category => [category.id, category])),
+    [incomeCategories],
+  );
 
-  const incomeCategoryCards = Object.entries(incomeByCategory)
+  const totalAllocated = Object.values(allocatedByIncomeCategory).reduce((sum, v) => sum + v, 0);
+  const percent = totalIncome > 0 ? Math.round(totalAllocated / totalIncome * 100) : 0;
+  const balance = totalIncome - totalAllocated;
+  const overspend = balance < -0.5;
+
+  const sources = Object.entries(incomeByCategory)
     .filter(([, total]) => total > 0)
     .map(([categoryId, total]) => {
       const category = incomeCategoryMap.get(categoryId);
-      const allocated = allocatedByIncomeCategory[categoryId] || 0;
-      const remaining = Math.max(total - allocated, 0);
-      const currency = currencyByCategory[categoryId] || 'RUB';
       return {
         id: categoryId,
         name: category?.name || 'Без категории',
         icon: category?.icon || '💰',
-        color: category?.color,
-        allocated,
-        remaining,
-        currency,
+        total,
+        remaining: Math.max(total - (allocatedByIncomeCategory[categoryId] || 0), 0),
       };
-    });
+    })
+    .sort((a, b) => b.total - a.total);
 
-  return (
-    <div className="grid gap-3 sm:gap-4 md:gap-6 mb-6 md:mb-8 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
-      <Card className="glass-card hover-lift overflow-hidden h-full">
-        <CardContent className="p-2 md:p-6">
-          <div className="flex flex-col items-center gap-1 md:gap-2">
-            <div className="w-8 h-8 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg flex-shrink-0">
-              <TrendingUp className="w-4 h-4 md:w-6 md:h-6 text-white" />
-            </div>
-            <div className="text-center min-w-0 w-full">
-              <p className="text-[10px] md:text-xs font-medium text-muted-foreground leading-tight">
-                Общий доход
+  if (totalIncome <= 0 && !ratesLoading) {
+    return (
+      <Card className="glass-card mb-6 md:mb-8">
+        <CardContent className="p-4 md:p-6 flex items-center gap-3 md:gap-4">
+          <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shrink-0">
+            <Wallet className="w-5 h-5 md:w-6 md:h-6 text-white" />
+          </div>
+          <div className="min-w-0">
+            <p className="font-semibold text-sm md:text-base">Доход ещё не добавлен</p>
+            <p className="text-xs md:text-sm text-muted-foreground">
+              Введите сумму в блоке «Доход» — суммы по категориям посчитаются сами.
+            </p>
+            {missingRates.length > 0 && (
+              <p className="text-xs text-destructive mt-1">
+                Нет курса {missingRates.join(', ')} — эти доходы пока не учтены
               </p>
-              <div className="flex flex-col items-center">
-                {incomeEntries.slice(0, 2).map((entry) => (
-                  <span
-                    key={entry.currency}
-                    className="text-sm md:text-lg font-bold leading-tight tabular-nums"
-                  >
-                    {money(entry.amount, entry.currency)}
-                  </span>
-                ))}
-                {incomeEntries.length > 2 && (
-                  <span className="text-[8px] md:text-xs text-muted-foreground">
-                    +{incomeEntries.length - 2} валют
-                  </span>
-                )}
-                {incomeEntries.length === 1 && (
-                  <span className="text-[10px] md:text-xs text-muted-foreground">
-                    Распределено: {totalAllocatedPercent}%
-                  </span>
-                )}
-              </div>
-            </div>
+            )}
           </div>
         </CardContent>
       </Card>
+    );
+  }
 
-      {incomeCategoryCards.map((card) => (
-        <Card key={card.id} className="glass-card hover-lift overflow-hidden h-full">
-          <CardContent className="p-2 md:p-6">
-            <div className="flex flex-col items-center gap-1 md:gap-2">
-              <div
-                className="w-8 h-8 md:w-12 md:h-12 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0 bg-secondary/60"
-                style={card.color ? { backgroundColor: card.color } : undefined}
-              >
-                <CategoryIcon icon={card.icon} className="text-base md:text-lg" />
-              </div>
-              <div className="text-center min-w-0 w-full">
-                <p className="text-[10px] md:text-xs font-medium text-muted-foreground leading-tight truncate">
-                  {card.name}
-                </p>
-                <div className="mt-0.5 md:mt-1 space-y-0.5">
-                  <p className="text-sm md:text-base font-bold tabular-nums">
-                    {money(card.allocated, card.currency)}
-                  </p>
-                  <p className="text-[10px] md:text-xs text-muted-foreground">
-                    Осталось {money(card.remaining, card.currency)}
-                  </p>
-                </div>
-              </div>
+  return (
+    <Card className="glass-card mb-6 md:mb-8">
+      <CardContent className="p-4 md:p-6 space-y-3 md:space-y-4">
+        <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
+          <div className="min-w-0">
+            <p className="text-xs md:text-sm text-muted-foreground">Доход</p>
+            <p className="text-2xl md:text-3xl font-bold tabular-nums leading-tight">
+              {ratesLoading ? 'Загружаем курс…' : money(totalIncome)}
+            </p>
+            {hasForeign && !ratesLoading && foreignTotals.length > 0 && (
+              <p className="text-xs text-muted-foreground truncate">
+                в т.ч. по курсу: {foreignTotals.map(([currency, amount]) => format(amount, currency)).join(', ')}
+              </p>
+            )}
+            {missingRates.length > 0 && !ratesLoading && (
+              <p className="text-xs text-destructive">
+                Нет курса {missingRates.join(', ')} — эти доходы пока не учтены
+              </p>
+            )}
+          </div>
+
+          <div className="flex gap-6 md:gap-10">
+            <div>
+              <p className="text-xs md:text-sm text-muted-foreground">Распределено</p>
+              <p className="text-base md:text-lg font-semibold tabular-nums">{money(totalAllocated)}</p>
             </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+            <div>
+              <p className="text-xs md:text-sm text-muted-foreground">{overspend ? 'Перерасход' : 'Остаток'}</p>
+              <p className={cn(
+                'text-base md:text-lg font-semibold tabular-nums',
+                overspend && 'text-destructive',
+              )}>
+                {money(Math.abs(balance) < 0.5 ? 0 : Math.abs(balance))}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <div
+            className="h-2 rounded-full bg-secondary overflow-hidden"
+            role="progressbar"
+            aria-valuenow={percent}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="Распределено от дохода"
+          >
+            <div
+              className={cn('h-full rounded-full transition-all', overspend ? 'bg-destructive' : 'bg-primary')}
+              style={{ width: `${Math.min(percent, 100)}%` }}
+            />
+          </div>
+          <p className={cn('text-xs tabular-nums', overspend ? 'text-destructive' : 'text-muted-foreground')}>
+            Распределено {percent}%
+          </p>
+        </div>
+
+        {sources.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {sources.map(source => (
+              <div
+                key={source.id}
+                className="flex items-center gap-2 rounded-lg bg-secondary/50 px-2.5 py-1.5 text-xs md:text-sm"
+              >
+                <CategoryIcon icon={source.icon} className="text-sm" />
+                <span className="font-medium">{source.name}</span>
+                <span className="tabular-nums">{money(source.total)}</span>
+                <span className="text-muted-foreground tabular-nums">· осталось {money(source.remaining)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

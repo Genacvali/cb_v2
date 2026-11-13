@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { CategoryIcon } from '@/components/icons/CategoryIcon';
 import { cn } from '@/lib/utils';
+import { formatPercent } from '@/lib/allocations';
 import { 
   Dialog, 
   DialogContent, 
@@ -36,7 +37,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Pencil, Trash2, TrendingUp, TrendingDown, Settings } from 'lucide-react';
+import { Plus, Pencil, Trash2, TrendingUp, TrendingDown, Tags } from 'lucide-react';
 import { toast } from 'sonner';
 import { IncomeCategory, ExpenseCategory } from '@/types/budget';
 import { ExpenseCategoryEditor } from './ExpenseCategoryEditor';
@@ -155,7 +156,7 @@ export function CategoryManager({
     return categoryAllocations.map(a => {
       const sourceName = a.income_category?.name || 'Неизвестно';
       const value = a.allocation_type === 'percentage' 
-        ? `${a.allocation_value}%` 
+        ? formatPercent(a.allocation_value)
         : money(a.allocation_value);
       return { sourceName, value };
     });
@@ -169,8 +170,9 @@ export function CategoryManager({
             variant="outline"
             size="sm"
             className={cn("gap-2", triggerClassName)}
+            title={showLabel ? undefined : 'Управление категориями'}
           >
-            <Settings className="w-4 h-4" />
+            <Tags className="w-4 h-4" />
             <span className={showLabel ? undefined : 'sr-only'}>
               Управление категориями
             </span>

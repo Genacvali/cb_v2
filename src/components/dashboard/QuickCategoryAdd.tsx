@@ -14,9 +14,11 @@ import { CATEGORY_EMOJI_OPTIONS, DEFAULT_CATEGORY_COLOR } from '@/constants/cate
 interface Props {
   type: 'income' | 'expense';
   onSuccess?: () => void;
+  /** Always-visible trigger text; without it the trigger shows «Добавить» from sm up. */
+  label?: string;
 }
 
-export function QuickCategoryAdd({ type, onSuccess }: Props) {
+export function QuickCategoryAdd({ type, onSuccess, label }: Props) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('💰');
@@ -72,7 +74,7 @@ export function QuickCategoryAdd({ type, onSuccess }: Props) {
           className="gap-1 h-8 text-muted-foreground hover:text-foreground"
         >
           <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">Добавить</span>
+          <span className={label ? undefined : 'hidden sm:inline'}>{label ?? 'Добавить'}</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-72 p-3 bg-popover border shadow-lg" align="end">

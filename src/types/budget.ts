@@ -46,6 +46,8 @@ export interface ExpenseCategoryAllocation {
   allocation_type: 'percentage' | 'fixed';
   allocation_value: number;
   created_at: string;
+  /** Top-up from «Распределить»; undefined until the column migration is applied. */
+  is_adjustment?: boolean;
   income_category?: IncomeCategory;
 }
 

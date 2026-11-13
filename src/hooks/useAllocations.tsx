@@ -2,6 +2,20 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { ExpenseCategoryAllocation } from '@/types/budget';
+import type { TablesInsert } from '@/integrations/supabase/types';
+
+type AllocationInsert = TablesInsert<'expense_category_allocations'>;
+
+/** Works before the is_adjustment migration is applied: retries without the column. */
+async function insertAllocations(rows: AllocationInsert[]) {
+  const { error } = await supabase.from('expense_category_allocations').insert(rows);
+  if (!error) return;
+  if (!/is_adjustment/.test(error.message)) throw error;
+  const { error: retryError } = await supabase
+    .from('expense_category_allocations')
+    .insert(rows.map(({ is_adjustment: _unused, ...rest }) => rest));
+  if (retryError) throw retryError;
+}
 
 export function useExpenseCategoryAllocations(expenseCategoryId?: string) {
   const { user } = useAuth();
@@ -48,10 +62,7 @@ export function useAddAllocation() {
   return useMutation({
     mutationFn: async (allocation: Omit<ExpenseCategoryAllocation, 'id' | 'user_id' | 'created_at' | 'income_category'>) => {
       if (!user) throw new Error('Not authenticated');
-      const { error } = await supabase
-        .from('expense_category_allocations')
-        .insert({ ...allocation, user_id: user.id });
-      if (error) throw error;
+      await insertAllocations([{ ...allocation, user_id: user.id }]);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['expense-category-allocations'] });
@@ -130,6 +141,7 @@ export function useBulkSaveAllocations() {
         income_category_id: string;
         allocation_type: 'percentage' | 'fixed';
         allocation_value: number;
+        is_adjustment?: boolean;
       }>;
     }) => {
       if (!user) throw new Error('Not authenticated');
@@ -143,18 +155,16 @@ export function useBulkSaveAllocations() {
       
       // Insert new allocations
       if (allocations.length > 0) {
-        const { error } = await supabase
-          .from('expense_category_allocations')
-          .insert(
-            allocations.map(a => ({
-              expense_category_id: expenseCategoryId,
-              income_category_id: a.income_category_id,
-              allocation_type: a.allocation_type,
-              allocation_value: a.allocation_value,
-              user_id: user.id,
-            }))
-          );
-        if (error) throw error;
+        await insertAllocations(
+          allocations.map(a => ({
+            expense_category_id: expenseCategoryId,
+            income_category_id: a.income_category_id,
+            allocation_type: a.allocation_type,
+            allocation_value: a.allocation_value,
+            ...(a.is_adjustment !== undefined && { is_adjustment: a.is_adjustment }),
+            user_id: user.id,
+          })),
+        );
       }
     },
     onSuccess: () => {

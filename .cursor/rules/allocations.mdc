@@ -1,0 +1,33 @@
+---
+description: Логика доходов, аллокаций и доплат CrystalBudget
+globs: src/lib/allocations*.ts,src/hooks/useAllocations.tsx,src/hooks/useIncomeTotals.tsx,src/components/dashboard/CategoryAllocation.tsx,src/components/dashboard/DistributeRemainingDialog.tsx,src/components/dashboard/StatsCards.tsx,src/components/dashboard/ExpenseCategoryForm.tsx
+alwaysApply: false
+---
+
+# Аллокации
+
+Чистая математика — в `@/lib/allocations`. UI только вызывает хелперы.
+
+## Ключевые функции
+
+- `sumIncomes` — суммы в валюте профиля; нет курса → пропуск + `missingRates`.
+- `allocationContribution(a, src)` — сколько реально берёт из источника (fixed режется `src`).
+- `allocationPlanned(a, src)` — сумма на карточке; при `src <= 0` всегда `0`.
+- `getAdjustmentIds` — сначала флаг `is_adjustment`, иначе эвристика: если в паре (расход, доход) есть percentage, все fixed = доплаты; иначе все fixed кроме самого старого.
+- `formatPercent` — отображение процентов.
+
+## Доплаты («Распределить»)
+
+- Новые доплаты вставлять с `is_adjustment: true` (если колонка есть).
+- Сброс выравнивания = удалить только adjustment-строки, основные %/суммы не трогать.
+- При перерасходе резать сначала доплаты.
+
+## UI-ожидания
+
+- Нет дохода → подсказка + план в подписи строки, справа «—», без полос доли.
+- Есть доход → сумма, доля %, тонкая полоса; сортировка по сумме по умолчанию.
+- Редкие действия (копировать картинкой, сброс выравнивания, порядок) — в меню «…».
+
+## Тесты
+
+Новую математику покрывать в `src/lib/allocations.test.ts` (vitest).

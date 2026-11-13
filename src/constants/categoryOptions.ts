@@ -1,9 +1,12 @@
-// Shared emoji options for category forms (20 options)
+// Shared emoji options for category forms
 
 export const CATEGORY_EMOJI_OPTIONS = [
   '💰', '💳', '🏠', '🚗', '🛒', '🎮', '✈️', '🎁', '📱', '💼',
   '🍔', '☕', '🏥', '📚', '👗', '🏋️', '🎵', '💊', '🐕', '💡',
-  '👶', '🐱', '🌸', '🎂'
+  '👶', '🐱', '🌸', '🎂',
+  // Быт
+  '🧹', '🧺', '🧼', '🧽', '🧻', '🚿', '🛁', '🔑', '🛋️', '🛏️',
+  '🍽️', '🍳', '🧊', '🚰', '🔌', '🧯', '🛠️', '🪴', '📦', '🗑️',
 ];
 
 // Default color for categories (used internally)
