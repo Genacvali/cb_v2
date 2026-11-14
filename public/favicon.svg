@@ -1,19 +1,23 @@
 <svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="cb-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#4F46E5" />
-      <stop offset="50%" stop-color="#EC4899" />
-      <stop offset="100%" stop-color="#F97316" />
+    <linearGradient id="crystal" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#E0F7FF" />
+      <stop offset="35%" stop-color="#5EC8F2" />
+      <stop offset="70%" stop-color="#2F7FEA" />
+      <stop offset="100%" stop-color="#1B4FBF" />
+    </linearGradient>
+    <linearGradient id="facet" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.55" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
     </linearGradient>
   </defs>
-  <rect x="4" y="4" width="56" height="56" rx="18" fill="url(#cb-gradient)" />
-  <path
-    d="M21 40C23.5 44.5 27.5 47 32 47C38 47 43 42.5 43 35.5C43 29.5 39.5 25 34 25C31 25 28.5 26.5 27 29C25.5 26.5 23 25 20 25C14.5 25 11 29.5 11 35.5C11 38.5 12 41.5 14 44"
-    fill="none"
-    stroke="#F9FAFB"
-    stroke-width="3"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
+  <rect width="64" height="64" rx="14" fill="#0B1220" />
+  <path d="M32 8 L48 24 L32 56 L16 24 Z" fill="url(#crystal)" />
+  <path d="M32 8 L40 24 L32 56 L24 24 Z" fill="url(#facet)" />
+  <path d="M16 24 L32 8 L48 24" fill="none" stroke="#B8ECFF" stroke-width="1.5" stroke-linejoin="round" />
+  <path d="M16 24 L48 24" fill="none" stroke="#7ED0F5" stroke-width="1.2" opacity="0.8" />
+  <path d="M24 24 L32 56 L40 24" fill="none" stroke="#9ADFFF" stroke-width="1" opacity="0.55" />
+  <circle cx="46" cy="14" r="1.4" fill="#FFFFFF" />
+  <circle cx="50" cy="20" r="1" fill="#FFFFFF" opacity="0.8" />
+  <circle cx="14" cy="18" r="1" fill="#FFFFFF" opacity="0.7" />
 </svg>
-
